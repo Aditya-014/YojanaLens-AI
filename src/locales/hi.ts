@@ -21,7 +21,8 @@ export const hi: LocaleDictionary = {
     modelDiagnostics: 'एआई मॉडल व फॉलबैक',
     engineTests: 'इकाई परीक्षण',
     privacyAbout: 'गोपनीयता व सीमाएं',
-    switchLanguage: 'Switch to English',
+    switchLanguage: 'हिन्दी / English',
+    selectLanguage: 'भाषा चुनें',
   },
   status: {
     match: 'पात्र (MATCH)',

@@ -19,7 +19,8 @@ export const en = {
     modelDiagnostics: 'AI Models & Failover',
     engineTests: 'Engine Tests',
     privacyAbout: 'Privacy & About',
-    switchLanguage: 'Switch to हिन्दी',
+    switchLanguage: 'हिन्दी / English',
+    selectLanguage: 'Language',
   },
   status: {
     match: 'MATCH',

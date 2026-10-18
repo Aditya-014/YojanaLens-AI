@@ -10,13 +10,13 @@ import {
 } from 'lucide-react';
 import { UserProfile, PROFILE_FIELD_REASONS } from '../types/profile.ts';
 import { INDIAN_STATES_AND_UTS } from '../data/verifiedSchemes.ts';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage, getLocalizedText } from '../locales/index.ts';
 
 interface ProfileFormProps {
   profile: UserProfile;
   onChangeProfile: (profile: UserProfile) => void;
   onSubmit: () => void;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({
@@ -25,7 +25,6 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
   onSubmit,
   language,
 }) => {
-  const isHi = language === 'hi';
   const t = getLocale(language);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
@@ -211,7 +210,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 ✕
               </button>
             </div>
-            <p className="leading-relaxed">{isHi ? info.why.hi : info.why.en}</p>
+            <p className="leading-relaxed">{getLocalizedText(info.why, language)}</p>
           </div>
         )}
       </div>
@@ -757,7 +756,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
               className="w-1/2 sm:w-auto px-7 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>{t.form.evaluateBtn}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
             </button>
           </div>
         </div>

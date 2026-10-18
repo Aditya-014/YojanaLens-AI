@@ -11,13 +11,13 @@ import {
   Edit3,
 } from 'lucide-react';
 import { SchemeEvaluation, EligibilityStatus, SchemeCategory } from '../types/scheme.ts';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage, getLocalizedText } from '../locales/index.ts';
 
 interface SchemeResultsProps {
   evaluations: SchemeEvaluation[];
   onSelectScheme: (evaluation: SchemeEvaluation) => void;
   onEditProfile: () => void;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const SchemeResults: React.FC<SchemeResultsProps> = ({
@@ -26,7 +26,6 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
   onEditProfile,
   language,
 }) => {
-  const isHi = language === 'hi';
   const t = getLocale(language);
 
   const [statusFilter, setStatusFilter] = useState<'ALL' | EligibilityStatus>('ALL');
@@ -50,7 +49,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const s = item.scheme;
-        const text = `${s.name.en} ${s.name.hi} ${s.shortName} ${s.administeringAuthority.en} ${s.administeringAuthority.hi} ${s.benefitsSummary.en} ${s.benefitsSummary.hi}`.toLowerCase();
+        const text = `${Object.values(s.name).join(' ')} ${s.shortName} ${Object.values(s.administeringAuthority).join(' ')} ${Object.values(s.benefitsSummary).join(' ')}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
 
@@ -352,7 +351,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
 
                   {/* Title */}
                   <h3 className="text-base font-bold text-slate-900 line-clamp-2">
-                    {isHi ? s.name.hi : s.name.en}
+                    {getLocalizedText(s.name, language)}
                   </h3>
                   <div className="text-xs text-emerald-800 font-semibold mt-0.5">
                     {s.shortName}
@@ -361,7 +360,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
                   {/* Ministry */}
                   <div className="flex items-center gap-1.5 text-xs text-stone-500 mt-2">
                     <Building2 className="w-3.5 h-3.5 shrink-0 text-stone-400" />
-                    <span className="truncate">{isHi ? s.administeringAuthority.hi : s.administeringAuthority.en}</span>
+                    <span className="truncate">{getLocalizedText(s.administeringAuthority, language)}</span>
                   </div>
 
                   {/* Benefit Highlight Box */}
@@ -370,7 +369,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
                       {t.results.keyBenefit}
                     </div>
                     <div className="text-xs font-semibold text-slate-800 mt-0.5 line-clamp-2">
-                      {isHi ? s.benefitsSummary.hi : s.benefitsSummary.en}
+                      {getLocalizedText(s.benefitsSummary, language)}
                     </div>
                   </div>
 
@@ -407,9 +406,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
                       <p className="mt-2 text-[11px] text-amber-800 font-medium flex items-center gap-1">
                         <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
                         <span>
-                          {isHi
-                            ? `${item.unknownCount} शर्त की जानकारी प्रोफ़ाइल में भरना शेष है`
-                            : `${item.unknownCount} criterion requires more profile info`}
+                          {item.unknownCount} • {t.results.missingFieldsHint}
                         </span>
                       </p>
                     )}
@@ -418,9 +415,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
                       <p className="mt-2 text-[11px] text-stone-500 font-medium flex items-center gap-1">
                         <XCircle className="w-3 h-3 text-stone-400 shrink-0" />
                         <span>
-                          {isHi
-                            ? `${item.failedCount} अनिवार्य नियम मेल नहीं खाता`
-                            : `${item.failedCount} condition not satisfied`}
+                          {item.failedCount} • {t.results.doesNotMatchHint}
                         </span>
                       </p>
                     )}
@@ -443,7 +438,7 @@ export const SchemeResults: React.FC<SchemeResultsProps> = ({
                     className="px-3.5 py-1.5 rounded-xl bg-white border border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-800 hover:text-emerald-900 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>{t.results.inspectEvidence}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-700" />
+                    <ChevronRight className="w-3.5 h-3.5 text-emerald-700 rtl:rotate-180 transition-transform" />
                   </button>
                 </div>
               </div>

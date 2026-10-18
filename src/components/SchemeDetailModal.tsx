@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  XCircle,
   AlertCircle,
-  HelpCircle,
+  XCircle,
+  ExternalLink,
   Sparkles,
-  Cpu,
-  Send,
   Calendar,
+  Building2,
+  Send,
+  HelpCircle,
   Info,
+  Cpu,
 } from 'lucide-react';
-import { SchemeEvaluation, AIExplanationResponse, AIQnAResponse } from '../types/scheme.ts';
-import { getLocale } from '../locales/index.ts';
+import { SchemeEvaluation, AIExplanationResponse } from '../types/scheme.ts';
+import { getLocale, SupportedLanguage, getLocalizedText } from '../locales/index.ts';
 
 interface SchemeDetailModalProps {
   evaluation: SchemeEvaluation;
   onClose: () => void;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
@@ -27,7 +28,6 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
   onClose,
   language,
 }) => {
-  const isHi = language === 'hi';
   const t = getLocale(language);
   const scheme = evaluation.scheme;
 
@@ -70,24 +70,25 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
       setAiExplanation(data);
     } catch (err: any) {
       console.error('Failed to load AI explanation:', err);
-      setAiError(err.message || 'Failed to generate AI explanation.');
+      setAiError(err.message || 'Failed to generate explanation.');
     } finally {
       setLoadingAi(false);
     }
   };
 
   useEffect(() => {
-    if (activeTab === 'ai') {
+    if (activeTab === 'ai' && !aiExplanation && !loadingAi) {
       fetchAiExplanation();
     }
   }, [activeTab, language]);
 
-  const handleAskQuestion = async (e?: React.FormEvent, presetQuestion?: string) => {
+  const handleAskQuestion = async (e?: React.FormEvent, customQ?: string) => {
     if (e) e.preventDefault();
-    const query = (presetQuestion || userQuestion).trim();
-    if (!query) return;
+    const query = customQ || userQuestion;
+    if (!query.trim() || askingQnA) return;
 
     setAskingQnA(true);
+    const qText = query.trim();
     setUserQuestion('');
 
     try {
@@ -96,18 +97,18 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           schemeId: scheme.id,
-          question: query,
+          question: qText,
           language,
-          evaluation,
         }),
       });
 
-      const data: AIQnAResponse = await res.json();
+      if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+      const data = await res.json();
       setQnaHistory((prev) => [
         ...prev,
         {
-          q: query,
-          a: data.answer,
+          q: qText,
+          a: data.answer || t.modal.qnaError,
           meta: data.modelMeta,
         },
       ]);
@@ -115,7 +116,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
       setQnaHistory((prev) => [
         ...prev,
         {
-          q: query,
+          q: qText,
           a: t.modal.qnaError,
         },
       ]);
@@ -132,16 +133,23 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Modal Top Header */}
-        <div className="p-6 bg-stone-50 border-b border-stone-200 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-stone-200 overflow-hidden">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-stone-200 bg-stone-50/70 flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-stone-200 text-stone-800">
+                {scheme.category}
+              </span>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                 {scheme.shortName}
               </span>
-              <span className="text-xs text-stone-500 flex items-center gap-1">
+              <span className="text-xs text-stone-400 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>
                   {t.modal.verifiedOn} {scheme.lastVerifiedDate}
@@ -156,11 +164,11 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
             </div>
 
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-              {isHi ? scheme.name.hi : scheme.name.en}
+              {getLocalizedText(scheme.name, language)}
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 mt-1">
-              {isHi ? scheme.administeringAuthority.hi : scheme.administeringAuthority.en} •{' '}
-              {isHi ? scheme.ministry.hi : scheme.ministry.en}
+              {getLocalizedText(scheme.administeringAuthority, language)} •{' '}
+              {getLocalizedText(scheme.ministry, language)}
             </p>
           </div>
 
@@ -173,51 +181,68 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
           </button>
         </div>
 
-        {/* Official Links & Status Banner */}
-        <div className="px-6 py-3 bg-emerald-950 text-emerald-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Modal Status & Action Bar */}
+        <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-emerald-200">{t.modal.statusLabel}</span>
-            <span className="px-2.5 py-0.5 rounded-full font-bold bg-white text-emerald-950">
-              {evaluation.status}
-            </span>
-            <span className="text-emerald-300">
+            <span className="text-stone-500 font-semibold">{t.modal.statusLabel}</span>
+            {evaluation.status === 'MATCH' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t.status.match}</span>
+              </span>
+            )}
+            {evaluation.status === 'NEEDS_INFORMATION' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-800">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>{t.status.needsInfo}</span>
+              </span>
+            )}
+            {evaluation.status === 'DOES_NOT_MATCH' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold bg-slate-100 text-slate-700">
+                <XCircle className="w-3.5 h-3.5 text-slate-500" />
+                <span>{t.status.doesNotMatch}</span>
+              </span>
+            )}
+            <span className="text-stone-400">
               ({evaluation.passedCount}/{evaluation.totalCriteria} {t.modal.criteriaPassed})
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <a
-              href={scheme.officialPortalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-semibold transition-colors"
-            >
-              <span>{t.modal.officialPortal}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+          <div className="flex items-center gap-2">
+            {scheme.officialPortalUrl && (
+              <a
+                href={scheme.officialPortalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-700 font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <span>{t.modal.officialPortal}</span>
+                <ExternalLink className="w-3 h-3 text-stone-400" />
+              </a>
+            )}
 
             {scheme.officialApplicationUrl && (
               <a
                 href={scheme.officialApplicationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1.5 shadow-xs transition-colors"
               >
                 <span>{t.modal.applyOnline}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-stone-200 px-6 bg-stone-50/50 overflow-x-auto">
+        <div className="px-6 border-b border-stone-200 bg-stone-50/50 flex space-x-2 rtl:space-x-reverse overflow-x-auto text-xs font-semibold">
           <button
             onClick={() => setActiveTab('criteria')}
-            className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+            className={`py-3 px-3.5 border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'criteria'
-                ? 'border-emerald-700 text-emerald-800'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
             📋 {t.modal.tabs.criteria}
@@ -225,47 +250,47 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
           <button
             onClick={() => setActiveTab('ai')}
-            className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`py-3 px-3.5 border-b-2 cursor-pointer transition-colors flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'ai'
-                ? 'border-emerald-700 text-emerald-800'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
             <span>{t.modal.tabs.ai}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('documents')}
-            className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+            className={`py-3 px-3.5 border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'documents'
-                ? 'border-emerald-700 text-emerald-800'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            📑 {t.modal.tabs.documents}
+            📑 {t.modal.tabs.documents} ({scheme.requiredDocuments.length})
           </button>
 
           <button
             onClick={() => setActiveTab('steps')}
-            className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+            className={`py-3 px-3.5 border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'steps'
-                ? 'border-emerald-700 text-emerald-800'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            🧭 {t.modal.tabs.steps}
+            🛣️ {t.modal.tabs.steps} ({scheme.applicationSteps.length})
           </button>
 
           <button
             onClick={() => setActiveTab('faqs')}
-            className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+            className={`py-3 px-3.5 border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'faqs'
-                ? 'border-emerald-700 text-emerald-800'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            ❓ {t.modal.tabs.faqs}
+            ❓ {t.modal.tabs.faqs} ({scheme.faqs.length})
           </button>
         </div>
 
@@ -280,11 +305,11 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                   {t.modal.overviewTitle}
                 </h4>
                 <p className="mt-1 text-sm text-stone-700 leading-relaxed">
-                  {isHi ? scheme.overview.hi : scheme.overview.en}
+                  {getLocalizedText(scheme.overview, language)}
                 </p>
                 <div className="mt-3 pt-3 border-t border-stone-200/60 flex items-center justify-between text-xs font-semibold text-emerald-800">
                   <span>
-                    {t.modal.statutoryBenefit} {isHi ? scheme.benefitsSummary.hi : scheme.benefitsSummary.en}
+                    {t.modal.statutoryBenefit} {getLocalizedText(scheme.benefitsSummary, language)}
                   </span>
                 </div>
               </div>
@@ -300,7 +325,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
                 <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full text-left rtl:text-right text-xs">
                       <thead className="bg-stone-100 text-stone-700 uppercase font-bold tracking-wider border-b border-stone-200">
                         <tr>
                           <th className="py-3 px-4">{t.modal.tableColCriterion}</th>
@@ -315,7 +340,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                           <tr key={c.id} className="hover:bg-stone-50/70">
                             {/* Criterion Name */}
                             <td className="py-3 px-4 font-semibold text-stone-900">
-                              {isHi ? c.criterionName.hi : c.criterionName.en}
+                              {getLocalizedText(c.criterionName, language)}
                             </td>
 
                             {/* User Value */}
@@ -327,13 +352,13 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                                     : 'bg-stone-100 text-stone-800'
                                 }`}
                               >
-                                {isHi ? c.userValueDisplay.hi : c.userValueDisplay.en}
+                                {getLocalizedText(c.userValueDisplay, language)}
                               </span>
                             </td>
 
                             {/* Required Condition */}
                             <td className="py-3 px-4 text-stone-600">
-                              {isHi ? c.requiredConditionDisplay.hi : c.requiredConditionDisplay.en}
+                              {getLocalizedText(c.requiredConditionDisplay, language)}
                             </td>
 
                             {/* Status */}
@@ -344,23 +369,33 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                                   <span>{t.status.passed}</span>
                                 </span>
                               )}
-                              {c.status === 'FAIL' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">
-                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                                  <span>{t.status.failed}</span>
-                                </span>
-                              )}
                               {c.status === 'UNKNOWN' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
                                   <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                                   <span>{t.status.unknown}</span>
                                 </span>
                               )}
+                              {c.status === 'FAIL' && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">
+                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>{t.status.failed}</span>
+                                </span>
+                              )}
                             </td>
 
                             {/* Evidence Citation */}
-                            <td className="py-3 px-4 text-stone-500 text-[11px]">
-                              <span>{c.evidenceCitation}</span>
+                            <td className="py-3 px-4 text-stone-500 text-[11px] max-w-xs">
+                              {c.evidenceCitation}
+                              {c.sourceUrl && (
+                                <a
+                                  href={c.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-1 inline-block text-emerald-700 hover:underline"
+                                >
+                                  [Portal]
+                                </a>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -376,9 +411,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                   {t.modal.scopeTitle}{' '}
                 </span>
                 <span>
-                  {isHi
-                    ? scheme.geographicAvailability.description.hi
-                    : scheme.geographicAvailability.description.en}
+                  {getLocalizedText(scheme.geographicAvailability.description, language)}
                 </span>
               </div>
             </div>
@@ -407,12 +440,8 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     <span>•</span>
                     <span>
                       {aiExplanation.modelMeta.usedFallback
-                        ? isHi
-                          ? '⚠️ फॉलबैक प्रयुक्त'
-                          : '⚠️ Fallback Used'
-                        : isHi
-                        ? '✅ प्राथमिक मॉडल'
-                        : '✅ Primary Slot'}
+                        ? '⚠️ ' + t.status.optional
+                        : '✅ ' + t.status.active}
                     </span>
                   </div>
                 </div>
@@ -429,9 +458,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                   <div className="py-8 flex flex-col items-center justify-center text-center">
                     <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3"></div>
                     <span className="text-xs font-semibold text-emerald-800">
-                      {isHi
-                        ? 'सत्यापित साक्ष्य से निष्कर्ष तैयार किया जा रहा है...'
-                        : 'Generating grounded explanation from verified statutory evidence...'}
+                      {t.modal.thinkingBtn}
                     </span>
                   </div>
                 ) : aiError ? (
@@ -466,14 +493,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 <div className="mb-4 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleAskQuestion(
-                        undefined,
-                        isHi
-                          ? 'आवेदन के लिए कौन-कौन से दस्तावेज अनिवार्य हैं?'
-                          : 'What mandatory documents are required to apply?'
-                      )
-                    }
+                    onClick={() => handleAskQuestion(undefined, t.modal.presetQDocs)}
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
                     📌 {t.modal.presetQDocs}
@@ -481,14 +501,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
                   <button
                     type="button"
-                    onClick={() =>
-                      handleAskQuestion(
-                        undefined,
-                        isHi
-                          ? 'आवेदन की आधिकारिक प्रक्रिया क्या है?'
-                          : 'What are the official steps to apply?'
-                      )
-                    }
+                    onClick={() => handleAskQuestion(undefined, t.modal.presetQSteps)}
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
                     🧭 {t.modal.presetQSteps}
@@ -496,14 +509,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
                   <button
                     type="button"
-                    onClick={() =>
-                      handleAskQuestion(
-                        undefined,
-                        isHi
-                          ? 'इस योजना में कुल कितना लाभ मिलता है?'
-                          : 'What is the exact benefit amount provided?'
-                      )
-                    }
+                    onClick={() => handleAskQuestion(undefined, t.modal.presetQBenefit)}
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
                     💰 {t.modal.presetQBenefit}
@@ -518,12 +524,11 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                         <div className="font-bold text-emerald-900 bg-emerald-100/60 p-2 rounded-lg">
                           Q: {item.q}
                         </div>
-                        <div className="text-stone-800 bg-white p-2.5 rounded-lg border border-stone-200 leading-relaxed whitespace-pre-line">
+                        <div className="text-stone-800 p-2.5 bg-white rounded-lg border border-stone-200/80 leading-relaxed whitespace-pre-line">
                           {item.a}
                           {item.meta && (
-                            <div className="mt-1.5 pt-1.5 border-t border-stone-100 text-[10px] text-stone-400 flex items-center justify-between font-mono">
-                              <span>Model: {item.meta.modelId}</span>
-                              <span>{item.meta.latencyMs}ms</span>
+                            <div className="mt-1.5 pt-1.5 border-t border-stone-100 text-[10px] text-stone-400 font-mono">
+                              Model: {item.meta.modelId} ({item.meta.provider}) • {item.meta.latencyMs}ms
                             </div>
                           )}
                         </div>
@@ -532,26 +537,27 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Input form */}
+                {/* Input Bar */}
                 <form onSubmit={handleAskQuestion} className="flex gap-2">
                   <input
                     type="text"
                     value={userQuestion}
                     onChange={(e) => setUserQuestion(e.target.value)}
                     placeholder={t.modal.qnaInputPlaceholder}
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                    disabled={askingQnA}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent disabled:bg-stone-100"
                   />
                   <button
                     type="submit"
-                    disabled={askingQnA || !userQuestion.trim()}
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                    disabled={!userQuestion.trim() || askingQnA}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {askingQnA ? (
-                      <span className="animate-pulse">{t.modal.thinkingBtn}</span>
+                      <span>{t.modal.thinkingBtn}</span>
                     ) : (
                       <>
                         <span>{t.modal.askBtn}</span>
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="w-3.5 h-3.5 rtl:rotate-180" />
                       </>
                     )}
                   </button>
@@ -560,29 +566,22 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: REQUIRED DOCUMENTS CHECKLIST */}
+          {/* TAB 3: OFFICIAL DOCUMENT READINESS CHECKLIST */}
           {activeTab === 'documents' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    {t.modal.checklistTitle}
-                  </h3>
-                  <p className="text-xs text-stone-500">
-                    {t.modal.checklistSubtitle}
-                  </p>
-                </div>
-
-                <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200">
-                  {Object.values(checkedDocs).filter(Boolean).length} / {scheme.requiredDocuments.length}{' '}
-                  {t.status.ready}
-                </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {t.modal.checklistTitle}
+                </h3>
+                <p className="text-xs text-stone-500">
+                  {t.modal.checklistSubtitle}
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-3">
                 {scheme.requiredDocuments.map((doc, idx) => {
-                  const docKey = doc.name.en;
-                  const isChecked = Boolean(checkedDocs[docKey]);
+                  const docKey = `${scheme.id}_doc_${idx}`;
+                  const isChecked = !!checkedDocs[docKey];
 
                   return (
                     <div
@@ -608,7 +607,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                               isChecked ? 'text-emerald-950 line-through' : 'text-slate-900'
                             }`}
                           >
-                            {isHi ? doc.name.hi : doc.name.en}
+                            {getLocalizedText(doc.name, language)}
                           </span>
                           <span
                             className={`px-2 py-0.2 rounded-full text-[10px] font-bold uppercase ${
@@ -621,7 +620,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-600 mt-1">
-                          {isHi ? doc.purpose.hi : doc.purpose.en}
+                          {getLocalizedText(doc.purpose, language)}
                         </p>
                       </div>
                     </div>
@@ -663,7 +662,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="text-sm font-bold text-slate-900">
-                          {isHi ? step.title.hi : step.title.en}
+                          {getLocalizedText(step.title, language)}
                         </h4>
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-stone-100 text-stone-600">
                           Channel: {step.channel}
@@ -671,7 +670,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                       </div>
 
                       <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                        {isHi ? step.description.hi : step.description.en}
+                        {getLocalizedText(step.description, language)}
                       </p>
 
                       {step.portalUrl && (
@@ -723,10 +722,10 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 {scheme.faqs.map((faq, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-white border border-stone-200">
                     <h4 className="text-sm font-bold text-emerald-950 mb-1">
-                      Q: {isHi ? faq.question.hi : faq.question.en}
+                      Q: {getLocalizedText(faq.question, language)}
                     </h4>
                     <p className="text-xs text-stone-700 leading-relaxed">
-                      {isHi ? faq.answer.hi : faq.answer.en}
+                      {getLocalizedText(faq.answer, language)}
                     </p>
                     {faq.officialSourceNote && (
                       <div className="mt-2 pt-2 border-t border-stone-100 text-[10px] text-stone-400">

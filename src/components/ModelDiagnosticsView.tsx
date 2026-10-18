@@ -8,7 +8,7 @@ import {
   Terminal,
   Info,
 } from 'lucide-react';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage } from '../locales/index.ts';
 
 interface ModelSlotInfo {
   slotId: 'primary' | 'fallback_a' | 'fallback_b' | 'deterministic_fallback';
@@ -22,7 +22,7 @@ interface ModelSlotInfo {
 }
 
 interface ModelDiagnosticsViewProps {
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ language }) => {

@@ -1,3 +1,5 @@
+import { SupportedLanguage } from '../locales/index.ts';
+
 export type SchemeCategory =
   | 'agriculture'
   | 'livelihood'
@@ -9,6 +11,8 @@ export type SchemeCategory =
   | 'education';
 
 export type EligibilityStatus = 'MATCH' | 'NEEDS_INFORMATION' | 'DOES_NOT_MATCH' | 'UNVERIFIED';
+
+export type LocalizedString = Record<string, string>;
 
 export type CriterionOperator =
   | 'EQUALS'
@@ -24,61 +28,59 @@ export type CriterionOperator =
 
 export interface SchemeCriterion {
   id: string;
-  name: { en: string; hi: string };
+  name: LocalizedString;
   field: string;
   operator: CriterionOperator;
   expectedValue: any;
-  requiredConditionDisplay: { en: string; hi: string };
+  requiredConditionDisplay: LocalizedString;
   evidenceSource: string;
   sourceUrl?: string;
   isMandatory: boolean;
 }
 
 export interface SchemeDocument {
-  name: { en: string; hi: string };
+  name: LocalizedString;
   mandatory: boolean;
-  purpose: { en: string; hi: string };
-  alternativeOptions?: { en: string; hi: string };
+  purpose: LocalizedString;
+  alternativeOptions?: LocalizedString;
   officialSourceNote?: string;
 }
 
 export interface ApplicationStep {
   stepNumber: number;
-  title: { en: string; hi: string };
-  description: { en: string; hi: string };
+  title: LocalizedString;
+  description: LocalizedString;
   channel: 'online' | 'csc' | 'bank' | 'post_office' | 'government_office';
   portalUrl?: string;
 }
 
 export interface SchemeFaq {
-  question: { en: string; hi: string };
-  answer: { en: string; hi: string };
+  question: LocalizedString;
+  answer: LocalizedString;
   officialSourceNote?: string;
 }
 
 export interface Scheme {
   id: string;
   code: string;
-  name: { en: string; hi: string };
+  name: LocalizedString;
   shortName: string;
-  administeringAuthority: { en: string; hi: string };
-  ministry: { en: string; hi: string };
+  administeringAuthority: LocalizedString;
+  ministry: LocalizedString;
   category: SchemeCategory;
   officialPortalUrl: string;
   officialApplicationUrl: string;
   sourceCitation: string;
   lastVerifiedDate: string;
   isVerified: boolean;
-  verificationNotes: { en: string; hi: string };
+  verificationNotes: LocalizedString;
   geographicAvailability: {
     type: 'pan_india' | 'states_only';
     applicableStates?: string[];
-    description: { en: string; hi: string };
+    description: LocalizedString;
   };
-  overview: { en: string; hi: string };
-  benefitsSummary: {
-    en: string;
-    hi: string;
+  overview: LocalizedString;
+  benefitsSummary: LocalizedString & {
     amount?: string;
     periodicity?: string;
   };
@@ -90,12 +92,12 @@ export interface Scheme {
 
 export interface CriterionEvaluationResult {
   id: string;
-  criterionName: { en: string; hi: string };
+  criterionName: LocalizedString;
   userValue: any;
-  userValueDisplay: { en: string; hi: string };
-  requiredConditionDisplay: { en: string; hi: string };
+  userValueDisplay: LocalizedString;
+  requiredConditionDisplay: LocalizedString;
   status: 'PASS' | 'FAIL' | 'UNKNOWN';
-  reason: { en: string; hi: string };
+  reason: LocalizedString;
   evidenceCitation: string;
   sourceUrl?: string;
   isMissingInfo: boolean;
@@ -112,19 +114,19 @@ export interface SchemeEvaluation {
   unknownCount: number;
   totalCriteria: number;
   matchScorePercentage: number;
-  summary: { en: string; hi: string };
+  summary: LocalizedString;
   evaluatedAt: string;
 }
 
 export interface AIExplanationPayload {
   schemeId: string;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
   evaluation: SchemeEvaluation;
 }
 
 export interface AIExplanationResponse {
   schemeId: string;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
   eligibilityExplanation: string;
   benefitsBreakdown: string;
   actionableNextSteps: string[];

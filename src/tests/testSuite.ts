@@ -297,38 +297,133 @@ export async function runAllUnitTests(): Promise<TestSuiteReport> {
   // ==========================================
   // SUITE 5: Multilingual Dictionary Parity & Key Validation
   // ==========================================
+  // ==========================================
+  // SUITE 5: 12 Indian Languages Translation Parity & RTL Validation
+  // ==========================================
   const suite5Tests: TestCaseResult[] = [];
   {
     const start = performance.now();
-    const { en, hi, findMissingLocaleKeys } = await import('../locales/index.ts');
-    const missingInHindi = findMissingLocaleKeys(en, hi);
-    const passed = missingInHindi.length === 0;
-    suite5Tests.push({
-      suiteName: 'Multilingual Dictionary Parity',
-      testName: 'Hindi locale dictionary has 100% key parity with English base (no missing keys)',
-      passed,
-      durationMs: Number((performance.now() - start).toFixed(2)),
-      expected: '0 missing translation keys',
-      actual: passed ? '0 missing keys (100% parity)' : `Missing keys: ${missingInHindi.join(', ')}`,
-    });
+    const {
+      en,
+      hi,
+      mr,
+      bn,
+      ta,
+      te,
+      gu,
+      kn,
+      ml,
+      pa,
+      or,
+      ur,
+      findMissingLocaleKeys,
+      isRtlLanguage,
+      SUPPORTED_LANGUAGES,
+      getLocale,
+    } = await import('../locales/index.ts');
+
+    const localeMap = {
+      hi: { name: 'Hindi (हिन्दी)', dict: hi },
+      mr: { name: 'Marathi (मराठी)', dict: mr },
+      bn: { name: 'Bengali (বাংলা)', dict: bn },
+      ta: { name: 'Tamil (தமிழ்)', dict: ta },
+      te: { name: 'Telugu (తెలుగు)', dict: te },
+      gu: { name: 'Gujarati (ગુજરાતી)', dict: gu },
+      kn: { name: 'Kannada (ಕನ್ನಡ)', dict: kn },
+      ml: { name: 'Malayalam (മലയാളം)', dict: ml },
+      pa: { name: 'Punjabi (ਪੰਜਾਬੀ)', dict: pa },
+      or: { name: 'Odia (ଓଡ଼ିଆ)', dict: or },
+      ur: { name: 'Urdu (اردو)', dict: ur },
+    };
+
+    // Test 5.1: 100% key parity for all 11 Indian languages against English
+    for (const [code, { name, dict }] of Object.entries(localeMap)) {
+      const missingKeys = findMissingLocaleKeys(en, dict);
+      const passed = missingKeys.length === 0;
+      suite5Tests.push({
+        suiteName: '12 Indian Languages Parity & RTL',
+        testName: `${name} locale dictionary has 100% key parity with English base`,
+        passed,
+        durationMs: Number((performance.now() - start).toFixed(2)),
+        expected: '0 missing translation keys',
+        actual: passed ? '0 missing keys (100% complete)' : `Missing keys: ${missingKeys.join(', ')}`,
+      });
+    }
+
+    // Test 5.2: Bidirectional symmetry (no extraneous or orphaned keys in target languages)
+    for (const [code, { name, dict }] of Object.entries(localeMap)) {
+      const extraKeys = findMissingLocaleKeys(dict, en);
+      const passed = extraKeys.length === 0;
+      suite5Tests.push({
+        suiteName: '12 Indian Languages Parity & RTL',
+        testName: `${name} has zero orphaned or unmapped keys (bidirectional symmetry)`,
+        passed,
+        durationMs: Number((performance.now() - start).toFixed(2)),
+        expected: '0 orphaned keys',
+        actual: passed ? '0 orphaned keys' : `Extra keys: ${extraKeys.join(', ')}`,
+      });
+    }
+
+    // Test 5.3: RTL layout detection: Urdu must be RTL, other 11 must be LTR
+    {
+      const urduIsRtl = isRtlLanguage('ur');
+      const otherRtlLangs = SUPPORTED_LANGUAGES.filter((l) => l.code !== 'ur' && isRtlLanguage(l.code));
+      const passed = urduIsRtl && otherRtlLangs.length === 0;
+      suite5Tests.push({
+        suiteName: '12 Indian Languages Parity & RTL',
+        testName: 'Urdu correctly triggers right-to-left (RTL) layout, while other 11 languages use LTR',
+        passed,
+        durationMs: Number((performance.now() - start).toFixed(2)),
+        expected: 'Urdu is RTL, others are LTR',
+        actual: passed ? 'Urdu is RTL, other 11 are LTR' : `Failed RTL check: others=${otherRtlLangs.map((l) => l.code).join(',')}`,
+      });
+    }
+
+    // Test 5.4: Supported languages metadata registry completeness
+    {
+      const expectedCount = 12;
+      const actualCount = SUPPORTED_LANGUAGES.length;
+      const allHaveNames = SUPPORTED_LANGUAGES.every((l) => l.name && l.englishName && l.script);
+      const passed = actualCount === expectedCount && allHaveNames;
+      suite5Tests.push({
+        suiteName: '12 Indian Languages Parity & RTL',
+        testName: 'All 12 languages registered in metadata with valid native names and scripts',
+        passed,
+        durationMs: Number((performance.now() - start).toFixed(2)),
+        expected: '12 languages with native names',
+        actual: `${actualCount} languages registered, all valid: ${allHaveNames}`,
+      });
+    }
+
+    // Test 5.5: Critical UI keys resolution across all 12 languages
+    {
+      let allPassed = true;
+      const failedLangs: string[] = [];
+      for (const langMeta of SUPPORTED_LANGUAGES) {
+        const dict = getLocale(langMeta.code);
+        if (
+          !dict.brand?.name ||
+          !dict.form?.title ||
+          !dict.results?.title ||
+          !dict.modal?.tabs?.criteria ||
+          !dict.disclaimer?.legalDisclosure
+        ) {
+          allPassed = false;
+          failedLangs.push(langMeta.code);
+        }
+      }
+      suite5Tests.push({
+        suiteName: '12 Indian Languages Parity & RTL',
+        testName: 'Essential user flow strings resolve non-empty across all 12 languages',
+        passed: allPassed,
+        durationMs: Number((performance.now() - start).toFixed(2)),
+        expected: 'All 12 languages resolve core UI keys',
+        actual: allPassed ? 'All 12 languages resolve valid non-empty strings' : `Failed: ${failedLangs.join(', ')}`,
+      });
+    }
   }
 
-  {
-    const start = performance.now();
-    const { en, hi, findMissingLocaleKeys } = await import('../locales/index.ts');
-    const missingInEnglish = findMissingLocaleKeys(hi, en);
-    const passed = missingInEnglish.length === 0;
-    suite5Tests.push({
-      suiteName: 'Multilingual Dictionary Parity',
-      testName: 'English locale dictionary has 100% key parity with Hindi base (bidirectional symmetry)',
-      passed,
-      durationMs: Number((performance.now() - start).toFixed(2)),
-      expected: '0 missing translation keys',
-      actual: passed ? '0 missing keys (100% parity)' : `Missing keys: ${missingInEnglish.join(', ')}`,
-    });
-  }
-
-  suites.push({ name: 'Multilingual Dictionary Parity', tests: suite5Tests });
+  suites.push({ name: '12 Indian Languages Parity & RTL', tests: suite5Tests });
 
   // ==========================================
   // SUITE 6: Geographic State Restrictions & Expanded Schemes Integrity

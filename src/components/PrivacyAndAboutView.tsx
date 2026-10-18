@@ -6,10 +6,10 @@ import {
   ExternalLink,
   AlertTriangle,
 } from 'lucide-react';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage } from '../locales/index.ts';
 
 interface PrivacyAndAboutViewProps {
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const PrivacyAndAboutView: React.FC<PrivacyAndAboutViewProps> = ({ language }) => {

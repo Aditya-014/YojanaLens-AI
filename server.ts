@@ -14,8 +14,36 @@ import {
   getModelSlotConfigs,
   testSpecificSlot,
 } from './server/aiProviderAdapter.ts';
+import {
+  SupportedLanguage,
+  SUPPORTED_LANGUAGES,
+  getLocalizedText,
+  getLocale,
+} from './src/locales/index.ts';
 
 dotenv.config();
+
+const LANGUAGE_PROMPT_DESCRIPTIONS: Record<SupportedLanguage, string> = {
+  en: 'simple, accessible Indian English',
+  hi: 'clear, respectful Hindi (हिन्दी)',
+  mr: 'clear, natural Marathi (मराठी)',
+  bn: 'clear, natural Bengali (বাংলা)',
+  ta: 'clear, natural Tamil (தமிழ்)',
+  te: 'clear, natural Telugu (తెలుగు)',
+  gu: 'clear, natural Gujarati (ગુજરાતી)',
+  kn: 'clear, natural Kannada (ಕನ್ನಡ)',
+  ml: 'clear, natural Malayalam (മലയാളം)',
+  pa: 'clear, natural Punjabi (ਪੰਜਾਬੀ)',
+  or: 'clear, natural Odia (ଓଡ଼ିଆ)',
+  ur: 'clear, natural Urdu (اردو)',
+};
+
+function resolveLanguage(langInput: any): SupportedLanguage {
+  if (typeof langInput === 'string' && SUPPORTED_LANGUAGES.some((l) => l.code === langInput)) {
+    return langInput as SupportedLanguage;
+  }
+  return 'en';
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,7 +96,9 @@ async function startServer() {
   app.post('/api/ai/explain', async (req: Request, res: Response) => {
     try {
       const { schemeId, language = 'en', evaluation } = req.body;
-      const lang = language === 'hi' ? 'hi' : 'en';
+      const lang = resolveLanguage(language);
+      const langDesc = LANGUAGE_PROMPT_DESCRIPTIONS[lang] || 'simple Indian English';
+      const t = getLocale(lang);
 
       const scheme = VERIFIED_SCHEMES.find((s) => s.id === schemeId);
       if (!scheme) {
@@ -85,11 +115,11 @@ CRITICAL CONSTITUTION:
 2. NEVER overturn, contradict, or soften the deterministic eligibility verdict (${currentEval.status}).
 3. If criteria failed or information is missing, explicitly explain the exact rule and evidence citation.
 4. Do not invent benefits, deadlines, cash amounts, or application links.
-5. Provide response in ${lang === 'hi' ? 'clear, respectful Hindi (हिन्दी)' : 'simple, accessible Indian English'}.
+5. Provide response in ${langDesc}.
 6. Avoid official government emblem imitation or claiming official decision authority. Always clarify that final discretion belongs to the administering department.`;
 
-      const prompt = `Scheme: ${scheme.name.en} (${scheme.shortName})
-Administering Authority: ${scheme.administeringAuthority.en} (${scheme.ministry.en})
+      const prompt = `Scheme: ${getLocalizedText(scheme.name, lang)} (${scheme.shortName})
+Administering Authority: ${getLocalizedText(scheme.administeringAuthority, lang)} (${getLocalizedText(scheme.ministry, lang)})
 Official Portal: ${scheme.officialPortalUrl}
 Source Citation: ${scheme.sourceCitation}
 Deterministic Status: ${currentEval.status}
@@ -97,15 +127,15 @@ Criteria Breakdown:
 ${currentEval.criteriaResults
   .map(
     (c: any) =>
-      `- Criterion: ${c.criterionName.en} | User's Value: ${c.userValueDisplay.en} | Required: ${c.requiredConditionDisplay.en} | Status: ${c.status} | Source: ${c.evidenceCitation}`
+      `- Criterion: ${getLocalizedText(c.criterionName, lang)} | User's Value: ${getLocalizedText(c.userValueDisplay, lang)} | Required: ${getLocalizedText(c.requiredConditionDisplay, lang)} | Status: ${c.status} | Source: ${c.evidenceCitation}`
   )
   .join('\n')}
 
-Benefits: ${scheme.benefitsSummary.en}
-Required Documents: ${scheme.requiredDocuments.map((d: any) => d.name.en).join(', ')}
+Benefits: ${getLocalizedText(scheme.benefitsSummary, lang)}
+Required Documents: ${scheme.requiredDocuments.map((d: any) => getLocalizedText(d.name, lang)).join(', ')}
 
 Please provide:
-1. A clear, friendly explanation of the eligibility result in ${lang === 'hi' ? 'Hindi' : 'English'}.
+1. A clear, friendly explanation of the eligibility result in ${langDesc}.
 2. Concise benefits breakdown.
 3. 3-4 actionable next steps.
 4. Document readiness advice.
@@ -122,21 +152,14 @@ Please provide:
         schemeId,
         language: lang,
         eligibilityExplanation: result.text || fallbackExplanation,
-        benefitsBreakdown: lang === 'hi' ? scheme.benefitsSummary.hi : scheme.benefitsSummary.en,
+        benefitsBreakdown: getLocalizedText(scheme.benefitsSummary, lang),
         actionableNextSteps: scheme.applicationSteps.map((s) =>
-          lang === 'hi'
-            ? `${s.stepNumber}. ${s.title.hi}: ${s.description.hi}`
-            : `${s.stepNumber}. ${s.title.en}: ${s.description.en}`
+          `${s.stepNumber}. ${getLocalizedText(s.title, lang)}: ${getLocalizedText(s.description, lang)}`
         ),
         documentReadinessAdvice: scheme.requiredDocuments.map((d) =>
-          lang === 'hi'
-            ? `${d.name.hi} (${d.mandatory ? 'अनिवार्य' : 'वैकल्पिक'}): ${d.purpose.hi}`
-            : `${d.name.en} (${d.mandatory ? 'Mandatory' : 'Optional'}): ${d.purpose.en}`
+          `${getLocalizedText(d.name, lang)} (${d.mandatory ? (t.status?.mandatory || 'Mandatory') : (t.status?.optional || 'Optional')}): ${getLocalizedText(d.purpose, lang)}`
         ),
-        cautionaryNotes:
-          lang === 'hi'
-            ? 'यह प्रारंभिक मूल्यांकन है। सरकारी पोर्टल या सीएससी पर किसी भी बिचौलिए को अनधिकृत शुल्क न दें।'
-            : 'This is a preliminary discovery assessment. Never pay unauthorized fees to middlemen or unverified agents.',
+        cautionaryNotes: t.disclaimer?.legalDisclosure || 'This is a preliminary discovery assessment. Never pay unauthorized fees to middlemen.',
         groundedSourceRef: scheme.sourceCitation,
         modelMeta: {
           slot: result.slotUsed,
@@ -157,7 +180,8 @@ Please provide:
   app.post('/api/ai/ask', async (req: Request, res: Response) => {
     try {
       const { schemeId, question, language = 'en' } = req.body;
-      const lang = language === 'hi' ? 'hi' : 'en';
+      const lang = resolveLanguage(language);
+      const langDesc = LANGUAGE_PROMPT_DESCRIPTIONS[lang] || 'simple Indian English';
 
       if (!question || typeof question !== 'string') {
         return res.status(400).json({ error: 'Question is required.' });
@@ -174,13 +198,13 @@ Please provide:
 CRITICAL RULES:
 1. Answer ONLY using the facts from the verified scheme context below.
 2. If the user question cannot be answered from the provided text, reply strictly stating that the information is not present in the verified dataset and advise visiting ${scheme.officialPortalUrl}.
-3. Respond in ${lang === 'hi' ? 'clear Hindi (हिन्दी)' : 'simple Indian English'}.
+3. Respond in ${langDesc}.
 4. Do not invent any rules, eligibility conditions, or contact numbers.`;
 
-      const prompt = `Scheme: ${scheme.name.en} (${scheme.shortName})
-Administering: ${scheme.administeringAuthority.en}
-Overview: ${scheme.overview.en}
-Benefits: ${scheme.benefitsSummary.en}
+      const prompt = `Scheme: ${getLocalizedText(scheme.name, lang)} (${scheme.shortName})
+Administering: ${getLocalizedText(scheme.administeringAuthority, lang)}
+Overview: ${getLocalizedText(scheme.overview, lang)}
+Benefits: ${getLocalizedText(scheme.benefitsSummary, lang)}
 Official Portal: ${scheme.officialPortalUrl}
 Application URL: ${scheme.officialApplicationUrl}
 Source: ${scheme.sourceCitation}
@@ -190,7 +214,7 @@ FAQs: ${JSON.stringify(scheme.faqs)}
 
 User Question: "${question}"
 
-Provide a factual, verified answer with source reference.`;
+Provide a factual, verified answer in ${langDesc} with source reference.`;
 
       const result = await executeWithFailover(prompt, systemInstruction, () => deterministicQnA.answer);
 

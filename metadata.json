@@ -2,5 +2,7 @@
   "name": "YojanaLens AI — Your Government Scheme Eligibility Assistant",
   "description": "Discover Indian government schemes you qualify for based on your profile with transparent, evidence-backed eligibility rules and bilingual AI guidance.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { Scheme, SchemeEvaluation, SchemeDocument, ApplicationStep } from '../src/types/scheme.ts';
+import { SupportedLanguage, getLocale, getLocalizedText } from '../src/locales/index.ts';
 
 export interface ModelSlotConfig {
   slotId: 'primary' | 'fallback_a' | 'fallback_b' | 'deterministic_fallback';
@@ -111,70 +112,88 @@ export function getModelSlotConfigs(): ModelSlotConfig[] {
  * Deterministic explanation generator derived strictly from the verified scheme and evaluation results.
  * Guaranteed to never fail, never hallucinate, and never contradict the deterministic rules.
  */
+/**
+ * Deterministic explanation generator derived strictly from the verified scheme and evaluation results.
+ * Guaranteed to never fail, never hallucinate, and never contradict the deterministic rules.
+ */
 export function generateDeterministicExplanation(
   evaluation: SchemeEvaluation,
-  language: 'en' | 'hi'
+  language: SupportedLanguage
 ): string {
   const s = evaluation.scheme;
-  const isHi = language === 'hi';
+  const t = getLocale(language);
 
-  if (isHi) {
-    let text = `### ${s.name.hi} के लिए आपकी पात्रता का विवरण\n\n`;
-    text += `**प्रशासनिक विभाग:** ${s.administeringAuthority.hi} (${s.ministry.hi})\n\n`;
+  // English deterministic text (preserves existing grounding test assertions)
+  if (language === 'en') {
+    let text = `### Eligibility Assessment for ${s.name.en}\n\n`;
+    text += `**Administering Authority:** ${s.administeringAuthority.en} (${s.ministry.en})\n\n`;
 
     if (evaluation.status === 'MATCH') {
-      text += `✅ **पात्रता निष्कर्ष: आप पात्र प्रतीत होते हैं (MATCH)**\n\n`;
-      text += `आपकी दर्ज जानकारी के अनुसार, आप इस योजना के सभी ${evaluation.passedCount} अनिवार्य नियमों को पूरा करते हैं:\n`;
+      text += `✅ **Eligibility Result: Preliminary Match (MATCH)**\n\n`;
+      text += `Based on the verified statutory criteria, your profile satisfies all ${evaluation.passedCount} mandatory requirements:\n`;
       for (const res of evaluation.criteriaResults) {
-        text += `- **${res.criterionName.hi}:** आपकी प्रोफ़ाइल "${res.userValueDisplay.hi}" आवश्यक शर्त (${res.requiredConditionDisplay.hi}) को पूरा करती है। (साक्ष्य: ${res.evidenceCitation})\n`;
+        text += `- **${res.criterionName.en}:** Your profile shows "${res.userValueDisplay.en}", satisfying the required condition: "${res.requiredConditionDisplay.en}". (Evidence: ${res.evidenceCitation})\n`;
       }
-      text += `\n**लाभ सारांश:** ${s.benefitsSummary.hi}\n\n`;
-      text += `**अगला कदम:** आधिकारिक पोर्टल [${s.officialPortalUrl}](${s.officialPortalUrl}) पर जाकर आवश्यक दस्तावेजों के साथ आवेदन प्रक्रिया प्रारंभ करें।`;
+      text += `\n**Key Benefit Summary:** ${s.benefitsSummary.en}\n\n`;
+      text += `**Recommended Action:** Proceed to the official verified portal at [${s.officialPortalUrl}](${s.officialPortalUrl}) to initiate your application.`;
     } else if (evaluation.status === 'NEEDS_INFORMATION') {
-      text += `⚠️ **पात्रता निष्कर्ष: अतिरिक्त जानकारी आवश्यक (NEEDS INFORMATION)**\n\n`;
-      text += `प्रारंभिक जांच में आप अपात्र नहीं पाए गए हैं, परंतु पात्रता की पुष्टि हेतु निम्नलिखित विवरण दर्ज करना आवश्यक है:\n`;
+      text += `⚠️ **Eligibility Result: Information Required (NEEDS INFORMATION)**\n\n`;
+      text += `You appear to potentially qualify, but confirmation requires details for the following criteria:\n`;
       for (const res of evaluation.criteriaResults.filter((r) => r.status === 'UNKNOWN')) {
-        text += `- **${res.criterionName.hi}:** इस शर्त (${res.requiredConditionDisplay.hi}) की पुष्टि हेतु कृपया प्रोफ़ाइल में जानकारी भरें।\n`;
+        text += `- **${res.criterionName.en}:** Missing required condition "${res.requiredConditionDisplay.en}".\n`;
       }
-      text += `\nअपनी प्रोफ़ाइल में यह जानकारी अपडेट करें ताकि सटीक परिणाम प्राप्त हो सके।`;
+      text += `\nPlease complete these fields in your profile to obtain a definitive match calculation.`;
     } else {
-      text += `❌ **पात्रता निष्कर्ष: प्रारंभिक नियमों के अनुसार अपात्र (DOES NOT MATCH)**\n\n`;
-      text += `प्रारंभिक मूल्यांकन के अनुसार आपकी वर्तमान प्रोफ़ाइल निम्नलिखित शर्तों से मेल नहीं खाती:\n`;
+      text += `❌ **Eligibility Result: Does Not Match (DOES NOT MATCH)**\n\n`;
+      text += `Based on current verified criteria, your profile does not satisfy one or more requirements:\n`;
       for (const res of evaluation.criteriaResults.filter((r) => r.status === 'FAIL')) {
-        text += `- **${res.criterionName.hi}:** आपकी प्रोफ़ाइल में मान "${res.userValueDisplay.hi}" है, जबकि नियम कहता है: ${res.requiredConditionDisplay.hi}। (साक्ष्य: ${res.evidenceCitation})\n`;
+        text += `- **${res.criterionName.en}:** Your value is "${res.userValueDisplay.en}", whereas the requirement mandates: "${res.requiredConditionDisplay.en}". (Evidence: ${res.evidenceCitation})\n`;
       }
-      text += `\n**महत्वपूर्ण ध्यान दें:** यह केवल प्रारंभिक जांच है। यदि आपके पास विशेष छूट या दस्तावेज हैं, तो कृपया आधिकारिक पोर्टल [${s.officialPortalUrl}](${s.officialPortalUrl}) पर विवरण देखें।`;
+      text += `\n**Important Notice:** This tool provides preliminary guidance based on public scheme rules. Final discretion rests with the administering authority at [${s.officialPortalUrl}](${s.officialPortalUrl}).`;
     }
 
     return text;
   }
 
-  // English deterministic text
-  let text = `### Eligibility Assessment for ${s.name.en}\n\n`;
-  text += `**Administering Authority:** ${s.administeringAuthority.en} (${s.ministry.en})\n\n`;
+  // Multilingual template for Indian languages (hi, mr, bn, ta, te, gu, kn, ml, pa, or, ur)
+  const schemeName = getLocalizedText(s.name, language);
+  const authName = getLocalizedText(s.administeringAuthority, language);
+  const minName = getLocalizedText(s.ministry, language);
+  const benefitText = getLocalizedText(s.benefitsSummary, language);
+
+  let text = `### ${schemeName}\n\n`;
+  text += `**${authName}** (${minName})\n\n`;
 
   if (evaluation.status === 'MATCH') {
-    text += `✅ **Eligibility Result: Preliminary Match (MATCH)**\n\n`;
-    text += `Based on the verified statutory criteria, your profile satisfies all ${evaluation.passedCount} mandatory requirements:\n`;
+    text += `✅ **${t.status.match}**\n\n`;
+    text += `${t.results.allCriteriaSatisfied} (${evaluation.passedCount}/${evaluation.totalCriteria}):\n`;
     for (const res of evaluation.criteriaResults) {
-      text += `- **${res.criterionName.en}:** Your profile shows "${res.userValueDisplay.en}", satisfying the required condition: "${res.requiredConditionDisplay.en}". (Evidence: ${res.evidenceCitation})\n`;
+      const cName = getLocalizedText(res.criterionName, language);
+      const uVal = getLocalizedText(res.userValueDisplay, language);
+      const rCond = getLocalizedText(res.requiredConditionDisplay, language);
+      text += `- **${cName}:** ${uVal} → ${rCond} (${t.modal.tableColEvidence}: ${res.evidenceCitation})\n`;
     }
-    text += `\n**Key Benefit Summary:** ${s.benefitsSummary.en}\n\n`;
-    text += `**Recommended Action:** Proceed to the official verified portal at [${s.officialPortalUrl}](${s.officialPortalUrl}) to initiate your application.`;
+    text += `\n**${t.results.keyBenefit}** ${benefitText}\n\n`;
+    text += `**${t.modal.officialPortal}:** [${s.officialPortalUrl}](${s.officialPortalUrl})`;
   } else if (evaluation.status === 'NEEDS_INFORMATION') {
-    text += `⚠️ **Eligibility Result: Information Required (NEEDS INFORMATION)**\n\n`;
-    text += `You appear to potentially qualify, but confirmation requires details for the following criteria:\n`;
+    text += `⚠️ **${t.status.needsInfo}**\n\n`;
+    text += `${t.results.missingFieldsHint}:\n`;
     for (const res of evaluation.criteriaResults.filter((r) => r.status === 'UNKNOWN')) {
-      text += `- **${res.criterionName.en}:** Missing required condition "${res.requiredConditionDisplay.en}".\n`;
+      const cName = getLocalizedText(res.criterionName, language);
+      const rCond = getLocalizedText(res.requiredConditionDisplay, language);
+      text += `- **${cName}:** ${rCond}\n`;
     }
-    text += `\nPlease complete these fields in your profile to obtain a definitive match calculation.`;
+    text += `\n${t.modal.overviewTitle} ${s.officialPortalUrl}`;
   } else {
-    text += `❌ **Eligibility Result: Does Not Match (DOES NOT MATCH)**\n\n`;
-    text += `Based on current verified criteria, your profile does not satisfy one or more requirements:\n`;
+    text += `❌ **${t.status.doesNotMatch}**\n\n`;
+    text += `${t.results.doesNotMatchHint}:\n`;
     for (const res of evaluation.criteriaResults.filter((r) => r.status === 'FAIL')) {
-      text += `- **${res.criterionName.en}:** Your value is "${res.userValueDisplay.en}", whereas the requirement mandates: "${res.requiredConditionDisplay.en}". (Evidence: ${res.evidenceCitation})\n`;
+      const cName = getLocalizedText(res.criterionName, language);
+      const uVal = getLocalizedText(res.userValueDisplay, language);
+      const rCond = getLocalizedText(res.requiredConditionDisplay, language);
+      text += `- **${cName}:** ${uVal} ≠ ${rCond} (${res.evidenceCitation})\n`;
     }
-    text += `\n**Important Notice:** This tool provides preliminary guidance based on public scheme rules. Final discretion rests with the administering authority at [${s.officialPortalUrl}](${s.officialPortalUrl}).`;
+    text += `\n**${t.disclaimer.shortNotice}** [${s.officialPortalUrl}](${s.officialPortalUrl})`;
   }
 
   return text;
@@ -186,20 +205,28 @@ export function generateDeterministicExplanation(
 export function generateDeterministicQnA(
   scheme: Scheme,
   question: string,
-  language: 'en' | 'hi'
+  language: SupportedLanguage
 ): { answer: string; isGrounded: boolean; sources: string[] } {
-  const isHi = language === 'hi';
+  const t = getLocale(language);
   const qLower = question.toLowerCase();
 
   // Search in official FAQs
   for (const faq of scheme.faqs) {
-    const faqText = (faq.question.en + ' ' + faq.question.hi + ' ' + faq.answer.en + ' ' + faq.answer.hi).toLowerCase();
+    const faqEn = faq.question.en.toLowerCase() + ' ' + faq.answer.en.toLowerCase();
+    const faqHi = (faq.question.hi || '').toLowerCase() + ' ' + (faq.answer.hi || '').toLowerCase();
+    const faqAll = `${faqEn} ${faqHi}`;
     const keywords = qLower.split(/\s+/).filter((w) => w.length > 3);
-    const matches = keywords.filter((k) => faqText.includes(k));
+    const matches = keywords.filter((k) => faqAll.includes(k));
 
-    if (matches.length >= 2 || qLower.includes('how many') || qLower.includes('collateral') || qLower.includes('ekyc') || qLower.includes('land')) {
+    if (
+      matches.length >= 2 ||
+      qLower.includes('how many') ||
+      qLower.includes('collateral') ||
+      qLower.includes('ekyc') ||
+      qLower.includes('land')
+    ) {
       return {
-        answer: isHi ? faq.answer.hi : faq.answer.en,
+        answer: getLocalizedText(faq.answer, language),
         isGrounded: true,
         sources: [faq.officialSourceNote || scheme.sourceCitation, scheme.officialPortalUrl],
       };
@@ -207,37 +234,60 @@ export function generateDeterministicQnA(
   }
 
   // Common keywords
-  if (qLower.includes('document') || qLower.includes('दस्तावेज') || qLower.includes('कागजात')) {
+  if (
+    qLower.includes('document') ||
+    qLower.includes('दस्तावेज') ||
+    qLower.includes('कागजात') ||
+    qLower.includes('کاغذات') ||
+    qLower.includes('ஆவணம்') ||
+    qLower.includes('పత్రాలు') ||
+    qLower.includes('ದಾಖಲೆ')
+  ) {
     const docList = scheme.requiredDocuments
-      .map((d: SchemeDocument) => `• ${isHi ? d.name.hi : d.name.en} (${d.mandatory ? (isHi ? 'अनिवार्य' : 'Mandatory') : (isHi ? 'वैकल्पिक' : 'Optional')}): ${isHi ? d.purpose.hi : d.purpose.en}`)
+      .map(
+        (d: SchemeDocument) =>
+          `• ${getLocalizedText(d.name, language)} (${d.mandatory ? t.status.mandatory : t.status.optional}): ${getLocalizedText(d.purpose, language)}`
+      )
       .join('\n');
     return {
-      answer: isHi
-        ? `आधिकारिक दिशानिर्देशों के अनुसार आवश्यक दस्तावेज निम्नलिखित हैं:\n\n${docList}`
-        : `According to verified guidelines, the required documents are:\n\n${docList}`,
+      answer: `${t.modal.checklistTitle}:\n\n${docList}`,
       isGrounded: true,
       sources: [scheme.sourceCitation, scheme.officialPortalUrl],
     };
   }
 
-  if (qLower.includes('apply') || qLower.includes('आवेदन') || qLower.includes('पोर्टल') || qLower.includes('link')) {
+  if (
+    qLower.includes('apply') ||
+    qLower.includes('आवेदन') ||
+    qLower.includes('पोर्टल') ||
+    qLower.includes('link') ||
+    qLower.includes('દરખાસ્ત') ||
+    qLower.includes('விண்ணப்பம்')
+  ) {
     const steps = scheme.applicationSteps
-      .map((s: ApplicationStep) => `${s.stepNumber}. **${isHi ? s.title.hi : s.title.en}**: ${isHi ? s.description.hi : s.description.en}`)
+      .map(
+        (s: ApplicationStep) =>
+          `${s.stepNumber}. **${getLocalizedText(s.title, language)}**: ${getLocalizedText(s.description, language)}`
+      )
       .join('\n');
     return {
-      answer: isHi
-        ? `आवेदन करने की आधिकारिक प्रक्रिया:\n\n${steps}\n\nआधिकारिक आवेदन लिंक: ${scheme.officialApplicationUrl}`
-        : `Verified steps to apply:\n\n${steps}\n\nOfficial Application Portal: ${scheme.officialApplicationUrl}`,
+      answer: `${t.modal.stepsTitle}:\n\n${steps}\n\n${t.modal.officialPortal}: ${scheme.officialApplicationUrl}`,
       isGrounded: true,
       sources: [scheme.officialApplicationUrl, scheme.sourceCitation],
     };
   }
 
-  if (qLower.includes('benefit') || qLower.includes('लाभ') || qLower.includes('पैसा') || qLower.includes('रुपये') || qLower.includes('amount')) {
+  if (
+    qLower.includes('benefit') ||
+    qLower.includes('लाभ') ||
+    qLower.includes('पैसा') ||
+    qLower.includes('ਰੁਪਏ') ||
+    qLower.includes('பயன்') ||
+    qLower.includes('లబ్ధి') ||
+    qLower.includes('amount')
+  ) {
     return {
-      answer: isHi
-        ? `इस योजना के तहत लाभ विवरण: ${scheme.benefitsSummary.hi}। अधिक जानकारी आधिकारिक पोर्टल ${scheme.officialPortalUrl} पर उपलब्ध है।`
-        : `Benefit summary for this scheme: ${scheme.benefitsSummary.en}. Further statutory details can be verified at ${scheme.officialPortalUrl}.`,
+      answer: `${t.modal.statutoryBenefit} ${getLocalizedText(scheme.benefitsSummary, language)} (${scheme.officialPortalUrl})`,
       isGrounded: true,
       sources: [scheme.sourceCitation, scheme.officialPortalUrl],
     };
@@ -245,9 +295,10 @@ export function generateDeterministicQnA(
 
   // Strict honest refusal if not grounded
   return {
-    answer: isHi
-      ? `माफ़ कीजिए, यह विशिष्ट जानकारी इस योजना के सत्यापित सरकारी डेटासेट में उपलब्ध नहीं है। मनगढ़ंत जानकारी देने से बचने के लिए, कृपया आधिकारिक पोर्टल (${scheme.officialPortalUrl}) अथवा संबंधित मंत्रालय की वेबसाइट देखें।`
-      : `I cannot answer this question because the specific verified information is not present in the supplied scheme dataset. To avoid hallucination, please consult the official portal at ${scheme.officialPortalUrl}.`,
+    answer:
+      language === 'en'
+        ? `I cannot answer this question because the specific verified information is not present in the supplied scheme dataset. To avoid hallucination, please consult the official portal at ${scheme.officialPortalUrl}.`
+        : `${t.modal.qnaSubtitle} (${scheme.officialPortalUrl})`,
     isGrounded: false,
     sources: [scheme.officialPortalUrl],
   };

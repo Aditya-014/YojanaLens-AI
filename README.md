@@ -213,13 +213,32 @@ The adapter in `server/aiProviderAdapter.ts` implements genuine failover across 
 
 ---
 
-## 9. Complete Multilingual Architecture & Dictionary Parity
+## 9. Complete 12 Indian Languages Multilingual Architecture & RTL Support
 
-YojanaLens AI utilizes a **single source of truth dictionary architecture** in `src/locales/`:
-- `src/locales/en.ts`: Complete English dictionary.
-- `src/locales/hi.ts`: Complete Hindi dictionary with proper Devanagari typography (`Noto Sans Devanagari`).
-- Reusable `getLocale(language)` hook providing compile-time type safety across all components.
-- Automated bidirectional parity testing in `src/tests/testSuite.ts` (Suite 5) ensuring 0 missing keys.
+YojanaLens AI provides native, zero-English-fallback internationalization across **12 major Indian languages**:
+
+| # | Language | Native Name | Script | Direction | Dictionary File | Key Parity |
+|---|---|---|---|---|---|---|
+| 1 | English | English | Latin | LTR | `src/locales/en.ts` | Base Reference |
+| 2 | Hindi | हिन्दी | Devanagari | LTR | `src/locales/hi.ts` | 100% (0 missing keys) |
+| 3 | Marathi | मराठी | Devanagari | LTR | `src/locales/mr.ts` | 100% (0 missing keys) |
+| 4 | Bengali | বাংলা | Bengali | LTR | `src/locales/bn.ts` | 100% (0 missing keys) |
+| 5 | Tamil | தமிழ் | Tamil | LTR | `src/locales/ta.ts` | 100% (0 missing keys) |
+| 6 | Telugu | తెలుగు | Telugu | LTR | `src/locales/te.ts` | 100% (0 missing keys) |
+| 7 | Gujarati | ગુજરાતી | Gujarati | LTR | `src/locales/gu.ts` | 100% (0 missing keys) |
+| 8 | Kannada | ಕನ್ನಡ | Kannada | LTR | `src/locales/kn.ts` | 100% (0 missing keys) |
+| 9 | Malayalam | മലയാളം | Malayalam | LTR | `src/locales/ml.ts` | 100% (0 missing keys) |
+| 10 | Punjabi | ਪੰਜਾਬੀ | Gurmukhi | LTR | `src/locales/pa.ts` | 100% (0 missing keys) |
+| 11 | Odia | ଓଡ଼ିଆ | Odia | LTR | `src/locales/or.ts` | 100% (0 missing keys) |
+| 12 | Urdu | اردو | Perso-Arabic | **RTL** | `src/locales/ur.ts` | 100% (0 missing keys) |
+
+### Key Features of the i18n System:
+- **Instant Switching without Page Reload:** Seamless React state update with document-level `dir="rtl"` and `lang` attribute propagation.
+- **Persistent Across Sessions:** Selection remembered via `localStorage.getItem('yojanalens_language')`.
+- **Urdu Right-to-Left (RTL) Layout:** Automatically flips text direction, inputs, navigation, dropdowns, and margins using Tailwind's `rtl:` variants and `dir="rtl"`.
+- **Preservation of Official Requirements:** Scheme names, statutory guidelines, cash amounts, dates, and official government portal links are preserved with complete legal accuracy.
+- **Dual Language Navigation Controls:** Includes both the quick English/Hindi toggle button and the clean 12-language native name dropdown popover.
+- **Automated Dictionary Parity Testing:** Suite 5 in `src/tests/testSuite.ts` tests all 11 non-English dictionaries against English for both 100% completeness and zero orphaned keys.
 
 ---
 
@@ -240,7 +259,7 @@ npm run dev
 # 3. Build for production
 npm run build
 
-# 4. Run automated test suite
+# 4. Run automated test suite (39 automated assertions)
 npm test
 ```
 
@@ -271,14 +290,19 @@ PORT=3000
 
 ---
 
-## 12. Automated Testing & Quality Suite (6 Suites / 16 Tests)
+## 12. Automated Testing & Quality Suite (6 Suites / 39 Tests)
 
-The test suite in `src/tests/testSuite.ts` covers 6 automated test suites:
+The test suite in `src/tests/testSuite.ts` covers 6 comprehensive automated test suites:
 1. **Deterministic Matches:** Small farmer qualifies for PM-KISAN, urban vendor qualifies for PM SVANidhi, senior citizen qualifies for NSAP IGNOAPS.
 2. **Missing Information Safety:** Unrecorded landholding yields `NEEDS_INFORMATION`; blank profile never outputs false positives.
 3. **Exclusion Clauses & Boundary Limits:** Government employee disqualified from PM-KISAN; income > ₹2.5L fails PM-JAY; age < 19 fails PMMVY.
 4. **Grounding & Fallback Integrity:** Deterministic fallback embeds verified legal citations; Q&A engine strictly refuses out-of-context ungrounded queries.
-5. **Multilingual Dictionary Parity:** Automated recursive key-validation test verifying 100% key parity between English and Hindi dictionaries with zero missing translation keys.
+5. **12 Indian Languages Translation Parity & RTL Validation:**
+   - 100% key parity for all 11 non-English locales (Hindi, Marathi, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam, Punjabi, Odia, Urdu) against English reference dictionary.
+   - Bidirectional key symmetry (0 orphaned keys in any target language).
+   - Right-to-Left (RTL) validation (Urdu correctly detected as RTL, all 11 other languages detected as LTR).
+   - Metadata registry validation for all 12 languages with native scripts.
+   - Core UI flow string resolution verification across all 12 languages.
 6. **Geographic Boundaries & State Rules:** Out-of-state exclusion (UP resident fails MP Ladli Behna), eligible resident match, education income limits, and age boundary restrictions.
 
 Run tests via terminal:
@@ -292,13 +316,14 @@ Or open the **"Engine Tests"** tab directly in the web UI.
 ## 13. Hackathon Demo Walkthrough Flow
 
 For live presentations and judging demos:
-1. **Landing Hero:** Showcase the public-service green/blue design, grounded trust pill, and bilingual language toggle (`EN` / `हिन्दी`).
-2. **Persona Preset Check:** Click *"Farmer (UP)"* or *"Expectant Mother (MP)"* in the profile form to autofill realistic citizen parameters without typing.
-3. **Transparent Criteria Breakdown:** Click *"Evaluate Eligibility"*; examine the results dashboard showing `MATCH`, `NEEDS_INFORMATION`, and `DOES_NOT_MATCH` cards with statutory citations.
-4. **Category Filtering:** Filter across Agriculture, MSME, Healthcare, Housing, Women & Child, and Education.
-5. **Detailed Modal & Grounded Q&A:** Click *"View Scheme Details & Apply"* on PM-KISAN or MP Ladli Behna. Review the Document Checklist and ask a question (e.g., *"What documents are needed?"*). Observe the cited sources and model metadata badge showing active provider slot and latency.
-6. **Model Diagnostics & Failover:** Navigate to the *"AI Diagnostics"* tab to review active slots, latency benchmarks, and run live test pings on the 4-tier pipeline.
-7. **Automated Test Dashboard:** Navigate to *"Engine Tests"* tab and run all 16 unit tests directly in the browser to demonstrate 100% test pass rate and bilingual dictionary symmetry.
+1. **Landing Hero:** Showcase the public-service green/blue design, grounded trust pill, and 12-language selector (English, हिन्दी, मराठी, বাংলা, தமிழ், తెలుగు, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ, اردو).
+2. **Instant Language Switching & Urdu RTL:** Select Urdu to show dynamic Right-to-Left navigation, mirrored layouts, and authentic typography, then switch to Marathi, Bengali, Tamil, etc., demonstrating zero page reload and instant updates.
+3. **Persona Preset Check:** Click *"Farmer (UP)"* or *"Expectant Mother (MP)"* in the profile form to autofill realistic citizen parameters without typing.
+4. **Transparent Criteria Breakdown:** Click *"Evaluate Eligibility"*; examine the results dashboard showing `MATCH`, `NEEDS_INFORMATION`, and `DOES_NOT_MATCH` cards with statutory citations.
+5. **Category Filtering:** Filter across Agriculture, MSME, Healthcare, Housing, Women & Child, and Education.
+6. **Detailed Modal & Grounded Q&A:** Click *"View Scheme Details & Apply"* on PM-KISAN or MP Ladli Behna. Review the Document Checklist and ask a question (e.g., *"What documents are needed?"*). Observe the cited sources and model metadata badge showing active provider slot and latency in the selected language.
+7. **Model Diagnostics & Failover:** Navigate to the *"AI Diagnostics"* tab to review active slots, latency benchmarks, and run live test pings on the 4-tier pipeline.
+8. **Automated Test Dashboard:** Navigate to *"Engine Tests"* tab and run all 39 unit tests directly in the browser to demonstrate 100% test pass rate, multi-language parity, and failover resilience.
 
 ---
 

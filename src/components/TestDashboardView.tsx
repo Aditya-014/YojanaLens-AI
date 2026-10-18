@@ -6,10 +6,10 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { TestSuiteReport } from '../tests/testSuite.ts';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage } from '../locales/index.ts';
 
 interface TestDashboardViewProps {
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }) => {

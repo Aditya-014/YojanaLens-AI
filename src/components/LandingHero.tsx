@@ -8,12 +8,12 @@ import {
   ArrowRight,
   Layers,
 } from 'lucide-react';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage } from '../locales/index.ts';
 
 interface LandingHeroProps {
   onStartForm: () => void;
   onBrowseSchemes: () => void;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
   totalVerifiedSchemes: number;
 }
 
@@ -57,7 +57,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               className="px-6 py-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-base shadow-md hover:shadow-lg transition-all flex items-center gap-2 group cursor-pointer"
             >
               <span>{t.hero.startCta}</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180 transition-transform" />
             </button>
 
             <button

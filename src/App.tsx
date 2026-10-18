@@ -18,15 +18,22 @@ import { UserProfile, initialProfile } from './types/profile.ts';
 import { SchemeEvaluation } from './types/scheme.ts';
 import { VERIFIED_SCHEMES } from './data/verifiedSchemes.ts';
 import { evaluateAllSchemes } from './engine/eligibilityEngine.ts';
+import {
+  SupportedLanguage,
+  SUPPORTED_LANGUAGES,
+  isRtlLanguage,
+} from './locales/index.ts';
 
 export default function App() {
-  const [language, setLanguage] = useState<'en' | 'hi'>(() => {
+  const [language, setLanguage] = useState<SupportedLanguage>(() => {
     try {
       const saved = localStorage.getItem('yojanalens_language');
-      if (saved === 'hi' || saved === 'en') return saved;
+      const isValid = SUPPORTED_LANGUAGES.some((l) => l.code === saved);
+      if (isValid && saved) return saved as SupportedLanguage;
     } catch {}
     return 'en';
   });
+
   const [currentTab, setCurrentTab] = useState<'home' | 'form' | 'schemes' | 'models' | 'tests' | 'about'>('home');
   const [profile, setProfile] = useState<UserProfile>(() => {
     // Attempt to load from sessionStorage for page refresh preservation (zero persistent server storage)
@@ -42,6 +49,16 @@ export default function App() {
   });
 
   const [selectedSchemeForDetail, setSelectedSchemeForDetail] = useState<SchemeEvaluation | null>(null);
+
+  // Sync document level direction (RTL for Urdu, LTR for all others) and persist language
+  useEffect(() => {
+    const isRtl = isRtlLanguage(language);
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+    try {
+      localStorage.setItem('yojanalens_language', language);
+    } catch {}
+  }, [language]);
 
   // Recalculate deterministic evaluation whenever profile changes
   const handleProfileChange = (updatedProfile: UserProfile) => {
@@ -61,9 +78,15 @@ export default function App() {
   };
 
   const matchesCount = evaluations.filter((e) => e.status === 'MATCH').length;
+  const isRtl = isRtlLanguage(language);
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 font-sans selection:bg-emerald-600 selection:text-white">
+    <div
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className={`min-h-screen flex flex-col bg-stone-50 font-sans selection:bg-emerald-600 selection:text-white ${
+        isRtl ? 'font-urdu' : ''
+      }`}
+    >
       {/* Top Sticky Navigation */}
       <Navbar
         currentTab={currentTab}
@@ -72,9 +95,15 @@ export default function App() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         language={language}
+        onSelectLanguage={(newLang) => {
+          setLanguage(newLang);
+          try {
+            localStorage.setItem('yojanalens_language', newLang);
+          } catch {}
+        }}
         onToggleLanguage={() => {
           setLanguage((prev) => {
-            const next = prev === 'en' ? 'hi' : 'en';
+            const next: SupportedLanguage = prev === 'en' ? 'hi' : 'en';
             try {
               localStorage.setItem('yojanalens_language', next);
             } catch {}

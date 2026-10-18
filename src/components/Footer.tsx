@@ -1,10 +1,10 @@
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
-import { getLocale } from '../locales/index.ts';
+import { getLocale, SupportedLanguage } from '../locales/index.ts';
 
 interface FooterProps {
   onSelectTab: (tab: 'home' | 'form' | 'schemes' | 'models' | 'tests' | 'about') => void;
-  language: 'en' | 'hi';
+  language: SupportedLanguage;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectTab, language }) => {
