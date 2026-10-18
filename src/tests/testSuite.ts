@@ -294,6 +294,138 @@ export async function runAllUnitTests(): Promise<TestSuiteReport> {
 
   suites.push({ name: 'Grounding & Fallback Integrity', tests: suite4Tests });
 
+  // ==========================================
+  // SUITE 5: Multilingual Dictionary Parity & Key Validation
+  // ==========================================
+  const suite5Tests: TestCaseResult[] = [];
+  {
+    const start = performance.now();
+    const { en, hi, findMissingLocaleKeys } = await import('../locales/index.ts');
+    const missingInHindi = findMissingLocaleKeys(en, hi);
+    const passed = missingInHindi.length === 0;
+    suite5Tests.push({
+      suiteName: 'Multilingual Dictionary Parity',
+      testName: 'Hindi locale dictionary has 100% key parity with English base (no missing keys)',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: '0 missing translation keys',
+      actual: passed ? '0 missing keys (100% parity)' : `Missing keys: ${missingInHindi.join(', ')}`,
+    });
+  }
+
+  {
+    const start = performance.now();
+    const { en, hi, findMissingLocaleKeys } = await import('../locales/index.ts');
+    const missingInEnglish = findMissingLocaleKeys(hi, en);
+    const passed = missingInEnglish.length === 0;
+    suite5Tests.push({
+      suiteName: 'Multilingual Dictionary Parity',
+      testName: 'English locale dictionary has 100% key parity with Hindi base (bidirectional symmetry)',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: '0 missing translation keys',
+      actual: passed ? '0 missing keys (100% parity)' : `Missing keys: ${missingInEnglish.join(', ')}`,
+    });
+  }
+
+  suites.push({ name: 'Multilingual Dictionary Parity', tests: suite5Tests });
+
+  // ==========================================
+  // SUITE 6: Geographic State Restrictions & Expanded Schemes Integrity
+  // ==========================================
+  const suite6Tests: TestCaseResult[] = [];
+
+  // Test 6.1: Geographic State Exclusion
+  {
+    const start = performance.now();
+    const upProfile: UserProfile = {
+      ...initialProfile,
+      state: 'Uttar Pradesh',
+      gender: 'female',
+      age: 28,
+      annualIncome: 120000,
+    };
+    const mpLadliBehna = VERIFIED_SCHEMES.find((s) => s.id === 'mp-ladli-behna-yojana');
+    const result = mpLadliBehna ? evaluateEligibility(upProfile, mpLadliBehna) : null;
+    const passed = result?.status === 'DOES_NOT_MATCH';
+    suite6Tests.push({
+      suiteName: 'Geographic Boundaries & State Rules',
+      testName: 'Out-of-state applicant (UP resident) fails geographic check for MP Ladli Behna',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: 'DOES_NOT_MATCH',
+      actual: result?.status,
+    });
+  }
+
+  // Test 6.2: State-Specific Match for Eligible Resident
+  {
+    const start = performance.now();
+    const mpProfile: UserProfile = {
+      ...initialProfile,
+      state: 'Madhya Pradesh',
+      gender: 'female',
+      age: 28,
+      annualIncome: 120000,
+    };
+    const mpLadliBehna = VERIFIED_SCHEMES.find((s) => s.id === 'mp-ladli-behna-yojana');
+    const result = mpLadliBehna ? evaluateEligibility(mpProfile, mpLadliBehna) : null;
+    const passed = result?.status === 'MATCH';
+    suite6Tests.push({
+      suiteName: 'Geographic Boundaries & State Rules',
+      testName: 'Eligible woman resident of Madhya Pradesh correctly matches MP Ladli Behna',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: 'MATCH',
+      actual: result?.status,
+    });
+  }
+
+  // Test 6.3: Post-Matric Scholarship Education Income Limit
+  {
+    const start = performance.now();
+    const studentProfile: UserProfile = {
+      ...initialProfile,
+      age: 19,
+      category: 'SC',
+      annualIncome: 400000,
+    };
+    const pmsScheme = VERIFIED_SCHEMES.find((s) => s.id === 'post-matric-scholarship');
+    const result = pmsScheme ? evaluateEligibility(studentProfile, pmsScheme) : null;
+    const passed = result?.status === 'DOES_NOT_MATCH';
+    suite6Tests.push({
+      suiteName: 'Geographic Boundaries & State Rules',
+      testName: 'Student with annual income > ₹2.5L fails Post-Matric Scholarship income criteria',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: 'DOES_NOT_MATCH',
+      actual: result?.status,
+    });
+  }
+
+  // Test 6.4: Stand-Up India Age Requirement
+  {
+    const start = performance.now();
+    const underageApplicant: UserProfile = {
+      ...initialProfile,
+      age: 16,
+      category: 'ST',
+    };
+    const standUpScheme = VERIFIED_SCHEMES.find((s) => s.id === 'stand-up-india-scheme');
+    const result = standUpScheme ? evaluateEligibility(underageApplicant, standUpScheme) : null;
+    const passed = result?.status === 'DOES_NOT_MATCH';
+    suite6Tests.push({
+      suiteName: 'Geographic Boundaries & State Rules',
+      testName: 'Underage applicant (<18) fails Stand-Up India statutory age criterion',
+      passed,
+      durationMs: Number((performance.now() - start).toFixed(2)),
+      expected: 'DOES_NOT_MATCH',
+      actual: result?.status,
+    });
+  }
+
+  suites.push({ name: 'Geographic Boundaries & State Rules', tests: suite6Tests });
+
   // Summarize report
   let totalTests = 0;
   let passedTests = 0;

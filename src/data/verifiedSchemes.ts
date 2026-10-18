@@ -1,4 +1,5 @@
 import { Scheme } from '../types/scheme.ts';
+import { ADDITIONAL_VERIFIED_SCHEMES } from './additionalVerifiedSchemes.ts';
 
 export const INDIAN_STATES_AND_UTS = [
   'Andhra Pradesh',
@@ -39,7 +40,7 @@ export const INDIAN_STATES_AND_UTS = [
   'Puducherry',
 ];
 
-export const VERIFIED_SCHEMES: Scheme[] = [
+const CORE_VERIFIED_SCHEMES: Scheme[] = [
   {
     id: 'pm-kisan',
     code: 'PMKISAN',
@@ -1565,3 +1566,9 @@ export const VERIFIED_SCHEMES: Scheme[] = [
     ],
   },
 ];
+
+export const VERIFIED_SCHEMES: Scheme[] = [
+  ...CORE_VERIFIED_SCHEMES,
+  ...ADDITIONAL_VERIFIED_SCHEMES,
+];
+

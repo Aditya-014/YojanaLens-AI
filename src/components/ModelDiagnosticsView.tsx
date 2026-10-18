@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Cpu,
   CheckCircle2,
   AlertTriangle,
-  XCircle,
   ExternalLink,
   RefreshCw,
   Play,
   Terminal,
-  ShieldCheck,
-  Zap,
   Info,
 } from 'lucide-react';
+import { getLocale } from '../locales/index.ts';
 
 interface ModelSlotInfo {
   slotId: 'primary' | 'fallback_a' | 'fallback_b' | 'deterministic_fallback';
@@ -29,7 +26,7 @@ interface ModelDiagnosticsViewProps {
 }
 
 export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ language }) => {
-  const isHi = language === 'hi';
+  const t = getLocale(language);
 
   const [slots, setSlots] = useState<ModelSlotInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,17 +80,15 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white">
-              {isHi ? 'सिस्टम आर्किटेक्चर' : 'System Architecture'}
+              {t.modelsView.pill}
             </span>
-            <span className="text-xs text-stone-500">• 3-Slot Failover + Deterministic Rule Fallback</span>
+            <span className="text-xs text-stone-500">• {t.modelsView.subtitlePill}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            {isHi ? 'एआई मॉडल स्थिति एवं फॉलबैक व्यवस्था' : 'AI Model Diagnostics & Failover Architecture'}
+            {t.modelsView.title}
           </h2>
           <p className="mt-1 text-sm text-stone-600 max-w-2xl">
-            {isHi
-              ? 'योजना लेंस एआई एक बहुस्तरीय लचीले मॉडल एडेप्टर पर चलता है। यदि कोई प्रदाता अनुपलब्ध होता है, तो सिस्टम कभी क्रैश नहीं होता और स्वचालित रूप से सत्यापित नियमों पर लौट आता है।'
-              : 'YojanaLens AI runs on a fault-tolerant multi-tier provider adapter. If external providers experience timeouts or rate limits, the system cascades gracefully to the offline deterministic rule engine.'}
+            {t.modelsView.desc}
           </p>
         </div>
 
@@ -102,7 +97,7 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
           className="px-4 py-2 rounded-xl border border-stone-300 hover:bg-stone-50 text-stone-800 text-xs font-semibold flex items-center gap-2 self-start md:self-auto cursor-pointer"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>{isHi ? 'स्थिति ताज़ा करें' : 'Refresh Status'}</span>
+          <span>{t.modelsView.refreshBtn}</span>
         </button>
       </div>
 
@@ -123,7 +118,7 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-                    Slot: {slot.slotId}
+                    {t.modelsView.slotLabel} {slot.slotId}
                   </span>
                   <h3 className="text-base font-bold text-slate-900 mt-0.5">{slot.name}</h3>
                 </div>
@@ -131,12 +126,12 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
                 {slot.isConfigured ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>{isHi ? 'सक्रिय' : 'Configured'}</span>
+                    <span>{t.status.active}</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-100 text-stone-600">
                     <AlertTriangle className="w-3.5 h-3.5 text-stone-400" />
-                    <span>{isHi ? 'अनकॉन्फ़िगर' : 'Not Configured'}</span>
+                    <span>{t.status.unconfigured}</span>
                   </span>
                 )}
               </div>
@@ -177,7 +172,7 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
                   className="px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                 >
                   <Play className={`w-3 h-3 ${isTesting ? 'animate-spin' : ''}`} />
-                  <span>{isTesting ? 'Testing...' : 'Test Slot Ping'}</span>
+                  <span>{isTesting ? t.modelsView.testingBtn : t.modelsView.testPingBtn}</span>
                 </button>
               </div>
             </div>
@@ -200,7 +195,7 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
                   : 'bg-rose-950 text-rose-400 border border-rose-800'
               }`}
             >
-              {testResult.success ? 'PASSED' : 'FAILED'}
+              {testResult.success ? 'PASSED' : 'FALLBACK USED / FAILED'}
             </span>
           </div>
 
@@ -245,39 +240,37 @@ export const ModelDiagnosticsView: React.FC<ModelDiagnosticsViewProps> = ({ lang
       <div className="p-6 rounded-3xl bg-white border border-stone-200">
         <h3 className="text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
           <Info className="w-4 h-4 text-emerald-700" />
-          <span>{isHi ? 'पर्यावरण चर एवं प्रदाता विन्यास निर्देश' : 'Environment Variables & Provider Setup Guide'}</span>
+          <span>{t.modelsView.guideTitle}</span>
         </h3>
         <p className="text-xs text-stone-600 mb-4 leading-relaxed">
-          {isHi
-            ? 'एआई स्टूडियो बिल्ड मोड में प्राथमिक जेमिनी एपीआई स्वचालित रूप से GEMINI_API_KEY से जुड़ा होता है। यदि आप अतिरिक्त ओपन-वेट मॉडल जोड़ना चाहते हैं, तो नीचे दिए गए सर्वर पर्यावरण चर कॉन्फ़िगर करें।'
-            : 'In AI Studio Build mode, the Primary Gemini slot is pre-configured via the server-side GEMINI_API_KEY secret. To connect secondary open-weight providers, set the following environment variables:'}
+          {t.modelsView.guideDesc}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
           <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
-            <div className="font-bold text-slate-900 mb-1">Primary Slot (Active)</div>
+            <div className="font-bold text-slate-900 mb-1">Slot 1: Primary (Active)</div>
             <div className="text-emerald-800">GEMINI_API_KEY="AI Studio User Secret"</div>
             <div className="text-stone-500 mt-1">Model: gemini-3.8-flash via @google/genai</div>
           </div>
 
           <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
-            <div className="font-bold text-slate-900 mb-1">Fallback Slot A (Open-Weight)</div>
-            <div className="text-stone-700">FALLBACK_A_API_KEY="your-token"</div>
-            <div className="text-stone-700">FALLBACK_A_ENDPOINT="https://..."</div>
-            <div className="text-stone-500 mt-1">Default Model: google/gemma-2-9b-it</div>
+            <div className="font-bold text-slate-900 mb-1">Slot 2: Ollama Open-Weight (Optional)</div>
+            <div className="text-stone-700">OLLAMA_BASE_URL="http://your-ollama-host:11434"</div>
+            <div className="text-stone-700">OLLAMA_MODEL="llama3.2"</div>
+            <div className="text-stone-500 mt-1">Open-Weight: Llama 3.2 / Qwen 2.5 / Mistral</div>
           </div>
 
           <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
-            <div className="font-bold text-slate-900 mb-1">Fallback Slot B (Open-Weight)</div>
-            <div className="text-stone-700">FALLBACK_B_API_KEY="your-token"</div>
-            <div className="text-stone-700">FALLBACK_B_ENDPOINT="https://..."</div>
-            <div className="text-stone-500 mt-1">Default Model: mistralai/Mistral-7B-Instruct</div>
+            <div className="font-bold text-slate-900 mb-1">Slot 3: Hugging Face Inference (Optional)</div>
+            <div className="text-stone-700">HF_TOKEN="hf_..."</div>
+            <div className="text-stone-700">HF_MODEL_ID="meta-llama/Llama-3.2-3B-Instruct"</div>
+            <div className="text-stone-500 mt-1">Provider: Hugging Face Serverless / Dedicated</div>
           </div>
 
           <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
-            <div className="font-bold text-slate-900 mb-1">Guaranteed Statutory Fallback</div>
-            <div className="text-emerald-800">Zero Configuration Required</div>
-            <div className="text-stone-500 mt-1">100% Deterministic Rule Engine</div>
+            <div className="font-bold text-slate-900 mb-1">Slot 4: Guaranteed Statutory Fallback</div>
+            <div className="text-emerald-800">Zero Configuration Required (100% Active)</div>
+            <div className="text-stone-500 mt-1">Deterministic Rule Engine • Zero Hallucination</div>
           </div>
         </div>
       </div>

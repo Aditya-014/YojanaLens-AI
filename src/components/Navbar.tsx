@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Globe, Cpu, CheckCircle2, Info, BookOpen, Layers } from 'lucide-react';
+import { ShieldCheck, Globe, Cpu, CheckCircle2, Info, Layers } from 'lucide-react';
+import { getLocale } from '../locales/index.ts';
 
 interface NavbarProps {
   currentTab: 'home' | 'form' | 'schemes' | 'models' | 'tests' | 'about';
@@ -16,29 +17,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleLanguage,
   matchesCount,
 }) => {
-  const isHi = language === 'hi';
+  const t = getLocale(language);
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200">
       {/* Top Citizen Advisory Disclaimer Banner */}
-      <div className="bg-emerald-900 text-emerald-100 text-xs px-4 py-1.5 flex items-center justify-between">
+      <div className="bg-emerald-950 text-emerald-100 text-xs px-4 py-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
           <div className="flex items-center gap-1.5 truncate">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-medium text-emerald-200">
-              {isHi ? 'नागरिक सूचना:' : 'Public Benefit Notice:'}
-            </span>
-            <span className="truncate opacity-90">
-              {isHi
-                ? 'यह एक स्वतंत्र नागरिक खोज मंच है, आधिकारिक सरकारी वेबसाइट नहीं। अंतिम निर्णय संबंधित मंत्रालय का होता है।'
-                : 'Independent citizen discovery assistant. Not an official government portal. Final discretion rests with respective ministries.'}
+            <span className="truncate opacity-95 text-emerald-200 font-medium">
+              {t.disclaimer.banner}
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-3 shrink-0 text-emerald-300">
-            <span>{isHi ? '१००% नियम आधारित' : '100% Deterministic Engine'}</span>
+          <div className="hidden sm:flex items-center gap-3 shrink-0 text-emerald-300 font-medium text-[11px]">
+            <span>100% Deterministic</span>
             <span>•</span>
-            <span>{isHi ? 'गोपनीयता सुरक्षित' : 'Zero Data Retained'}</span>
+            <span>{t.disclaimer.privacyPromise}</span>
           </div>
         </div>
       </div>
@@ -57,14 +53,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold tracking-tight text-slate-900">
-                  Yojana<span className="text-emerald-700">Lens</span>
+                  {t.brand.name}
                   <span className="ml-1 text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    AI
+                    {t.brand.badge}
                   </span>
                 </span>
               </div>
               <p className="text-xs text-stone-500 font-medium">
-                {isHi ? 'योजना लेंस — सरकारी योजना पात्रता सहायक' : 'Government Scheme Eligibility Assistant'}
+                {t.brand.title}
               </p>
             </div>
           </div>
@@ -79,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
               }`}
             >
-              {isHi ? 'पात्रता जांचें' : 'Check Eligibility'}
+              {t.nav.checkEligibility}
             </button>
 
             <button
@@ -91,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Layers className="w-4 h-4 text-stone-400" />
-              <span>{isHi ? 'सभी योजनाएं' : 'Explore Schemes'}</span>
+              <span>{t.nav.exploreSchemes}</span>
               {matchesCount > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 rounded-full text-xs bg-emerald-600 text-white font-bold">
                   {matchesCount}
@@ -108,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Cpu className="w-4 h-4 text-stone-400" />
-              <span>{isHi ? 'एआई मॉडल व फॉलबैक' : 'AI Models & Failover'}</span>
+              <span>{t.nav.modelDiagnostics}</span>
             </button>
 
             <button
@@ -120,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <CheckCircle2 className="w-4 h-4 text-stone-400" />
-              <span>{isHi ? 'परीक्षण व गुणवत्ता' : 'Engine Tests'}</span>
+              <span>{t.nav.engineTests}</span>
             </button>
 
             <button
@@ -132,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Info className="w-4 h-4 text-stone-400" />
-              <span>{isHi ? 'गोपनीयता व सीमाएं' : 'Privacy & About'}</span>
+              <span>{t.nav.privacyAbout}</span>
             </button>
           </nav>
 
@@ -140,11 +136,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onToggleLanguage}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50 hover:bg-stone-100 text-stone-700 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50 hover:bg-stone-100 text-stone-800 text-xs font-semibold transition-all shadow-xs cursor-pointer"
               title="Change Language / भाषा बदलें"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{language === 'en' ? 'हिन्दी में बदलें' : 'Switch to English'}</span>
+              <span>{t.nav.switchLanguage}</span>
             </button>
 
             {/* Mobile menu trigger */}

@@ -1,7 +1,7 @@
 # YojanaLens AI — Your Government Scheme Eligibility Assistant
-> **योजना लेंस एआई — भारत सरकार की कल्याणकारी योजनाओं का पारदर्शी पात्रता सहायक**
+> **योजना लेंस एआई — भारत सरकार एवं राज्य सरकारों की कल्याणकारी योजनाओं का पारदर्शी पात्रता सहायक**
 
-An independent, AI-powered public-benefit discovery application designed to help Indian citizens discover central government welfare schemes they may qualify for based on their personal profile. Built with a **strict separation between deterministic statutory eligibility rules and the AI explanation layer**, ensuring zero hallucination, evidence-backed transparency, and full citizen privacy.
+An independent, AI-powered public-benefit discovery application designed to help Indian citizens discover central and state government welfare schemes they qualify for based on their personal profile. Built with a **strict separation between deterministic statutory eligibility rules and the AI explanation layer**, ensuring zero hallucination, evidence-backed transparency, and full citizen privacy.
 
 ---
 
@@ -9,28 +9,29 @@ An independent, AI-powered public-benefit discovery application designed to help
 1. [Problem Statement & Project Mission](#problem-statement--project-mission)
 2. [Key Implemented Features](#key-implemented-features)
 3. [Architecture & Technology Stack](#architecture--technology-stack)
-4. [Verified Schemes Dataset](#verified-schemes-dataset)
+4. [Verified Schemes Dataset (27 Authoritative Schemes)](#verified-schemes-dataset-27-authoritative-schemes)
 5. [Deterministic Eligibility Engine](#deterministic-eligibility-engine)
-6. [AI Model Provider Adapter & 3-Tier Failover Design](#ai-model-provider-adapter--3-tier-failover-design)
+6. [AI Model Provider Adapter & 4-Slot Failover Pipeline](#ai-model-provider-adapter--4-slot-failover-pipeline)
 7. [Exact Model IDs, Routes, Terms & Licenses](#exact-model-ids-routes-terms--licenses)
-8. [Privacy & Security Constitution](#privacy--security-constitution)
-9. [Installation & Run Instructions](#installation--run-instructions)
-10. [Environment Variables & Secret Configuration](#environment-variables--secret-configuration)
-11. [Automated Testing & Quality Suite](#automated-testing--quality-suite)
-12. [Known Limitations & Roadmap](#known-limitations--roadmap)
-13. [Open Source License](#open-source-license)
+8. [Land Records & Privacy Constitution](#land-records--privacy-constitution)
+9. [Complete Multilingual Architecture & Dictionary Parity](#complete-multilingual-architecture--dictionary-parity)
+10. [Installation & Run Instructions](#installation--run-instructions)
+11. [Environment Variables & Secret Configuration](#environment-variables--secret-configuration)
+12. [Automated Testing & Quality Suite (6 Suites / 16 Tests)](#automated-testing--quality-suite-6-suites--16-tests)
+13. [Hackathon Demo Walkthrough Flow](#hackathon-demo-walkthrough-flow)
+14. [Open Source License](#open-source-license)
 
 ---
 
 ## 1. Problem Statement & Project Mission
 
-Millions of Indian citizens—farmers, urban street vendors, traditional artisans, expectant mothers, and senior citizens—miss out on life-changing welfare assistance because eligibility guidelines are buried in complex gazette notifications, spread across fragmented ministry portals, or misrepresented by exploitative middlemen.
+Millions of Indian citizens—farmers, urban street vendors, traditional artisans, expectant mothers, students, and senior citizens—miss out on life-changing welfare assistance because eligibility guidelines are buried in complex gazette notifications, spread across fragmented ministry portals, or misrepresented by exploitative middlemen.
 
 **YojanaLens AI** solves this by:
-- Giving citizens an honest, preliminary evaluation of their eligibility across verified central schemes.
+- Giving citizens an honest, preliminary evaluation of their eligibility across verified central and state schemes.
 - Explaining the exact reason and evidence behind every criterion in clear **English or Hindi (हिन्दी)**.
 - Diagnosing missing information (`NEEDS_INFORMATION`) rather than falsely predicting a match.
-- Guiding users directly to verified official application portals (`pmkisan.gov.in`, `pmsvanidhi.mohua.gov.in`, `beneficiary.nha.gov.in`, etc.).
+- Guiding users directly to verified official application portals (`pmkisan.gov.in`, `pmayg.nic.in`, `ladlibehna.mp.gov.in`, etc.).
 - Clearly clarifying that it is **not an official government portal** and that final discretion belongs solely to the respective statutory department.
 
 ---
@@ -47,7 +48,8 @@ Millions of Indian citizens—farmers, urban street vendors, traditional artisan
   - `DOES_NOT_MATCH`: At least one confirmed criterion fails or falls under an exclusion clause.
   - `UNVERIFIED`: Scheme information insufficiently verified.
 - **Criterion-by-Criterion Evidence Table:** Displays user's value, required condition, status (PASS/FAIL/UNKNOWN), and statutory citation quote with official portal link.
-- **Bilingual Experience (English / हिन्दी):** Complete UI strings, criteria definitions, scheme overviews, and AI explanations instantly switchable between English and Hindi.
+- **Bilingual Experience (English / हिन्दी):** 100% dictionary-based translation. Complete UI strings, criteria definitions, scheme overviews, and AI explanations instantly switchable between English and Hindi with persistence in `localStorage`.
+- **Category Filter Chips Bar:** Filter schemes by All, Agriculture, MSME & Livelihood, Healthcare, Women & Children, Housing, Pensions & Social Security, Financial Inclusion, and Education.
 - **Strictly Grounded AI Explanation & Q&A:** AI responses are strictly anchored in verified scheme context; the model explicitly refuses to speculate on topics outside the supplied dataset.
 - **Document Readiness Checklist:** Interactive checklist allowing citizens to mark off required documents and understand mandatory vs optional requirements.
 - **Step-by-Step Application Roadmap:** Detailed channels (Online, CSC, Bank, Post Office) with direct verified application links.
@@ -76,10 +78,10 @@ Millions of Indian citizens—farmers, urban street vendors, traditional artisan
    ┌──────────────▼─────────────┐   ┌─────────────▼───────────────┐
    │   Deterministic Engine     │   │     AI Provider Adapter     │
    │ (src/engine/eligibility...)│   │ (server/aiProviderAdapter)  │
-   │ - Pure TypeScript Rules    │   │ 1. Primary (Gemini 3.8/Gemma│
-   │ - Zero LLM Guesswork       │   │ 2. Fallback A (Open-Weight) │
-   │ - 100% Offline Testable    │   │ 3. Fallback B (Open-Weight) │
-   │ - Verified Scheme Database │   │ 4. Deterministic Generator  │
+   │ - Pure TypeScript Rules    │   │ 1. Primary: Gemini 3.8 Flash│
+   │ - Zero LLM Guesswork       │   │ 2. Secondary: Ollama API    │
+   │ - 100% Offline Testable    │   │ 3. Tertiary: Hugging Face   │
+   │ - 27 Verified Schemes DB   │   │ 4. Deterministic Fallback   │
    └────────────────────────────┘   └─────────────────────────────┘
 ```
 
@@ -90,36 +92,60 @@ Millions of Indian citizens—farmers, urban street vendors, traditional artisan
 
 ---
 
-## 4. Verified Schemes Dataset
+## 4. Verified Schemes Dataset (27 Authoritative Schemes)
 
-All schemes in `src/data/verifiedSchemes.ts` have been curated from official operational guidelines:
+All schemes in `src/data/verifiedSchemes.ts` and `src/data/additionalVerifiedSchemes.ts` have been curated from official operational guidelines:
 
-| # | Scheme Short Name | Administering Authority | Official Portal | Verification Date |
-|---|---|---|---|---|
-| 1 | **PM-KISAN** | Dept of Agriculture & Farmers Welfare | https://pmkisan.gov.in | 2026-09-20 |
-| 2 | **PM SVANidhi** | Ministry of Housing & Urban Affairs (MoHUA) | https://pmsvanidhi.mohua.gov.in | 2026-09-18 |
-| 3 | **AB PM-JAY** | National Health Authority (NHA) | https://pmjay.gov.in | 2026-09-25 |
-| 4 | **PMMVY** | Ministry of Women & Child Development | https://pmmvy.wcd.gov.in | 2026-09-22 |
-| 5 | **PM Vishwakarma** | Ministry of MSME | https://pmvishwakarma.gov.in | 2026-09-15 |
-| 6 | **Sukanya Samriddhi (SSY)**| National Savings Institute / India Post | https://nsiindia.gov.in | 2026-09-28 |
-| 7 | **PMAY-Urban 2.0** | Ministry of Housing & Urban Affairs | https://pmay-urban.gov.in | 2026-09-19 |
-| 8 | **IGNOAPS Pension** | Ministry of Rural Development | https://nsap.nic.in | 2026-09-24 |
-| 9 | **PM Mudra Yojana** | Dept of Financial Services, Ministry of Finance | https://www.mudra.org.in | 2026-09-27 |
+### Central Sector & Centrally Sponsored Schemes (Pan-India)
+| # | Scheme Short Name | Category | Administering Authority | Official Portal | Verification Date |
+|---|---|---|---|---|---|
+| 1 | **PM-KISAN** | Agriculture | Dept of Agriculture & Farmers Welfare | https://pmkisan.gov.in | 2026-09-20 |
+| 2 | **PM SVANidhi** | Livelihood / MSME | Ministry of Housing & Urban Affairs (MoHUA) | https://pmsvanidhi.mohua.gov.in | 2026-09-18 |
+| 3 | **AB PM-JAY** | Healthcare | National Health Authority (NHA) | https://pmjay.gov.in | 2026-09-25 |
+| 4 | **PMMVY** | Women & Child | Ministry of Women & Child Development | https://pmmvy.wcd.gov.in | 2026-09-22 |
+| 5 | **PM Vishwakarma** | Livelihood | Ministry of MSME | https://pmvishwakarma.gov.in | 2026-09-15 |
+| 6 | **Sukanya Samriddhi (SSY)**| Women & Child | National Savings Institute / India Post | https://nsiindia.gov.in | 2026-09-28 |
+| 7 | **PMAY-Urban 2.0** | Housing | Ministry of Housing & Urban Affairs | https://pmay-urban.gov.in | 2026-09-19 |
+| 8 | **IGNOAPS Pension** | Social Security | Ministry of Rural Development | https://nsap.nic.in | 2026-09-24 |
+| 9 | **PM Mudra Yojana** | Financial Inclusion | Dept of Financial Services, Ministry of Finance | https://www.mudra.org.in | 2026-09-27 |
+| 10 | **PM Fasal Bima (PMFBY)** | Agriculture | Dept of Agriculture & Farmers Welfare | https://pmfby.gov.in | 2026-09-28 |
+| 11 | **PMAY-Gramin (PMAY-G)** | Housing | Ministry of Rural Development | https://pmayg.nic.in | 2026-10-01 |
+| 12 | **PM Suraksha Bima (PMSBY)** | Social Security | Dept of Financial Services, Ministry of Finance | https://www.jansuraksha.gov.in | 2026-10-01 |
+| 13 | **PM Jeevan Jyoti (PMJJBY)** | Financial Inclusion | Dept of Financial Services, Ministry of Finance | https://www.jansuraksha.gov.in | 2026-10-01 |
+| 14 | **Atal Pension Yojana (APY)** | Social Security | PFRDA, Ministry of Finance | https://www.npscra.nsdl.co.in | 2026-10-01 |
+| 15 | **Post-Matric Scholarship** | Education | Ministry of Social Justice / Tribal Affairs | https://scholarships.gov.in | 2026-09-25 |
+| 16 | **Stand-Up India** | Livelihood | Dept of Financial Services / SIDBI | https://www.standupmitra.in | 2026-09-20 |
+| 17 | **PMEGP** | Livelihood / MSME | KVIC, Ministry of MSME | https://www.kviconline.gov.in/pmegpeportal | 2026-09-22 |
+
+### State-Specific Verified Schemes
+| # | Scheme Short Name | State | Category | Administering Authority | Official Portal |
+|---|---|---|---|---|---|
+| 18 | **UP Kanya Sumangala** | Uttar Pradesh | Women & Child | Dept of Women & Child Development, UP | https://mksy.up.gov.in |
+| 19 | **UP Old Age Pension** | Uttar Pradesh | Social Security | Social Welfare Dept, Uttar Pradesh | https://sspy-up.gov.in |
+| 20 | **MP Ladli Behna** | Madhya Pradesh | Women & Child | Women & Child Development, MP | https://ladlibehna.mp.gov.in |
+| 21 | **MP Kisan Kalyan** | Madhya Pradesh | Agriculture | Revenue Department, MP | https://saara.mp.gov.in |
+| 22 | **Bihar Kanya Utthan** | Bihar | Education | Education Department, Bihar | https://medhasoft.bih.nic.in |
+| 23 | **Bihar Udyami Yojana** | Bihar | Livelihood | Department of Industries, Bihar | https://udyami.bihar.gov.in |
+| 24 | **MH Namo Shetkari** | Maharashtra | Agriculture | Department of Agriculture, Maharashtra | https://krishi.maharashtra.gov.in |
+| 25 | **MH Sanjay Gandhi Niradhar** | Maharashtra | Social Security | Social Justice & Special Assistance, MH | https://sjsa.maharashtra.gov.in |
+| 26 | **WB Krishak Bandhu** | West Bengal | Agriculture | Department of Agriculture, West Bengal | https://krishakbandhu.wb.gov.in |
+| 27 | **WB Kanyashree Prakalpa** | West Bengal | Education | Women Development & Social Welfare, WB | https://www.wbkanyashree.gov.in |
 
 ---
 
 ## 5. Deterministic Eligibility Engine
 
 The engine in `src/engine/eligibilityEngine.ts` is completely decoupled from LLMs:
-- **Rule Independence:** Evaluates age brackets, income ceilings, land ownership status, residence, and statutory exclusion clauses using pure conditional logic.
+- **Rule Independence:** Evaluates age brackets, income ceilings, land ownership status, residence, state boundaries, and statutory exclusion clauses using pure conditional logic.
+- **Geographic State Checks:** State-specific schemes strictly disqualify out-of-state profiles (`DOES_NOT_MATCH`) or prompt for missing state details (`NEEDS_INFORMATION`).
 - **Missing Information Integrity:** Missing fields never convert into a match. If an unknown field is required, the verdict is strictly `NEEDS_INFORMATION`.
 - **Exclusion Enforcement:** Excludes institutional landholders, regular government employees, or families owning a pucca house from applicable schemes.
 
 ---
 
-## 6. AI Model Provider Adapter & 3-Tier Failover Design
+## 6. AI Model Provider Adapter & 4-Slot Failover Pipeline
 
-The adapter in `server/aiProviderAdapter.ts` implements genuine failover:
+The adapter in `server/aiProviderAdapter.ts` implements genuine failover across 3 real AI model slots and a guaranteed deterministic fallback:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -128,17 +154,20 @@ The adapter in `server/aiProviderAdapter.ts` implements genuine failover:
                                │
                 ┌──────────────▼─────────────┐
                 │ Slot 1: Primary Model      │
-                │ Gemini 3.8 Flash / Gemma   │
+                │ Google Gemini 3.8 Flash    │
+                │ (via @google/genai SDK)    │
                 └──────┬──────────────┬──────┘
-             [Success] │              │ [Timeout / 429 / Error]
+             [Success] │              │ [Timeout / 429 / Error / Unconfigured]
                        │       ┌──────▼─────────────────────┐
-                       │       │ Slot 2: Fallback A         │
-                       │       │ Open-Weight (Gemma 2 9B)   │
+                       │       │ Slot 2: Secondary Model    │
+                       │       │ Ollama Chat API            │
+                       │       │ (Llama 3.2 / Qwen 2.5)     │
                        │       └──────┬──────────────┬──────┘
                        │   [Success]  │              │ [Error / Unconfigured]
                        │              │       ┌──────▼─────────────────────┐
-                       │              │       │ Slot 3: Fallback B         │
-                       │              │       │ Open-Weight (Mistral 7B)   │
+                       │              │       │ Slot 3: Tertiary Model     │
+                       │              │       │ Hugging Face Inference     │
+                       │              │       │ (Llama 3.2 3B Instruct)    │
                        │              │       └──────┬──────────────┬──────┘
                        │              │   [Success]  │              │ [Error / Unconfigured]
                        │              │              │       ┌──────▼─────────────────────┐
@@ -152,32 +181,49 @@ The adapter in `server/aiProviderAdapter.ts` implements genuine failover:
 ```
 
 ### Failover Guarantees
-1. **Never substitute an unrelated proprietary model.**
+1. **Never substitute an unrelated proprietary model silently.**
 2. **Always validate model response** before sending to client.
-3. **If all remote AI providers fail**, the built-in Deterministic Rule Generator produces an evidence-grounded explanation directly from the verified criteria matrix. The application is **100% operational even with zero external AI credentials**.
+3. **If all remote AI providers fail or are unconfigured**, the built-in Deterministic Rule Generator produces an evidence-grounded explanation directly from the verified criteria matrix. The application is **100% operational even with zero external AI credentials**.
 
 ---
 
 ## 7. Exact Model IDs, Routes, Terms & Licenses
 
-| Slot | Model ID | Provider | Route / SDK | Terms & License |
-|---|---|---|---|---|
-| **Primary** | `gemini-3.8-flash` | Google GenAI | `ai.models.generateContent` via `@google/genai` | [Google APIs Terms of Service](https://ai.google.dev/terms) |
-| **Fallback A** | `google/gemma-2-9b-it` | Configurable Open-Weight Host (HF / Groq / vLLM) | POST `/chat/completions` or Inference API | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
-| **Fallback B** | `mistralai/Mistral-7B-Instruct-v0.3` | Configurable Open-Weight Host | POST `/chat/completions` | [Apache 2.0 / Mistral Terms](https://mistral.ai/terms/) |
-| **Rule Fallback** | `yojanalens-rule-engine-v1` | Built-in Stateless Rule Engine | Internal Pure TS Engine | MIT License (Open Source) |
+| Slot | Config Env Var | Model ID | Provider | Route / SDK | Terms & License |
+|---|---|---|---|---|---|
+| **Slot 1 (Primary)** | `GEMINI_API_KEY` | `gemini-3.8-flash` | Google GenAI | `ai.models.generateContent` via `@google/genai` | [Google APIs Terms of Service](https://ai.google.dev/terms) |
+| **Slot 2 (Secondary)** | `OLLAMA_BASE_URL` | `llama3.2` | Ollama-compatible Server | POST `/api/chat` or `/v1/chat/completions` | [Llama 3.2 Community License / Apache 2.0](https://ollama.com) |
+| **Slot 3 (Tertiary)** | `HF_TOKEN` | `meta-llama/Llama-3.2-3B-Instruct` | Hugging Face Inference | POST `/models/{model_id}` or Router v1 | [Open-Weight License](https://huggingface.co/docs/inference-endpoints) |
+| **Slot 4 (Statutory)** | None (Built-in) | `yojanalens-rule-engine-v1` | Built-in Rule Engine | Internal Pure TS Engine | MIT License (Open Source) |
 
 ---
 
-## 8. Privacy & Security Constitution
+## 8. Land Records & Privacy Constitution
 
+- **Self-Declared Landholding Notice:** Agricultural land ownership is transparently marked as self-declared for eligibility discovery. The UI features direct verified links to official state land records portals:
+  - Uttar Pradesh: [UP Bhulekh](https://upbhulekh.gov.in)
+  - Madhya Pradesh: [MP Bhulekh](https://mpbhulekh.gov.in)
+  - Bihar: [Bihar Bhumi](https://biharbhumi.bihar.gov.in)
+  - Maharashtra: [Mahabhulekh](https://bhulekh.mahabhumi.gov.in)
+  - West Bengal: [Banglarbhumi](https://banglarbhumi.gov.in)
+  - Central: [Digital India Land Records Modernization Programme (DILRMP)](https://dilrmp.gov.in)
 - **Zero Logging of Sensitive Data:** Profiles are evaluated in memory and discarded upon session end.
-- **Server-Only Credentials:** API secrets are stored strictly on the server (`process.env.GEMINI_API_KEY`). The browser bundle contains zero API keys.
-- **No Aadhaar / Bank Collection:** Application strictly forbids requesting identity numbers or financial account credentials.
+- **Server-Only Credentials:** API secrets are stored strictly on the server (`process.env.GEMINI_API_KEY`, `process.env.HF_TOKEN`). The browser bundle contains zero API keys.
+- **No Aadhaar / Bank Collection:** Application strictly forbids requesting identity numbers, OTPs, or passwords.
 
 ---
 
-## 9. Installation & Run Instructions
+## 9. Complete Multilingual Architecture & Dictionary Parity
+
+YojanaLens AI utilizes a **single source of truth dictionary architecture** in `src/locales/`:
+- `src/locales/en.ts`: Complete English dictionary.
+- `src/locales/hi.ts`: Complete Hindi dictionary with proper Devanagari typography (`Noto Sans Devanagari`).
+- Reusable `getLocale(language)` hook providing compile-time type safety across all components.
+- Automated bidirectional parity testing in `src/tests/testSuite.ts` (Suite 5) ensuring 0 missing keys.
+
+---
+
+## 10. Installation & Run Instructions
 
 ### Prerequisites
 - Node.js 20+
@@ -202,38 +248,38 @@ The application will be accessible at `http://localhost:3000`.
 
 ---
 
-## 10. Environment Variables & Secret Configuration
+## 11. Environment Variables & Secret Configuration
 
 Copy `.env.example` to `.env`:
 ```bash
-# In AI Studio, GEMINI_API_KEY is injected automatically from user secrets
+# Slot 1: Primary Model (Google Gemini API via @google/genai)
+# AI Studio automatically injects GEMINI_API_KEY from user secrets.
 GEMINI_API_KEY="your-gemini-api-key"
-
-# Primary model ID
 PRIMARY_MODEL_ID="gemini-3.8-flash"
 
-# Optional Fallback Slot A (HuggingFace / Groq / OpenAI compatible)
-FALLBACK_A_API_KEY=""
-FALLBACK_A_ENDPOINT=""
-FALLBACK_A_MODEL_ID="google/gemma-2-9b-it"
+# Slot 2: Secondary Open-Weight Provider (Ollama Chat API - Optional)
+OLLAMA_BASE_URL=""
+OLLAMA_MODEL="llama3.2"
+OLLAMA_API_KEY=""
 
-# Optional Fallback Slot B
-FALLBACK_B_API_KEY=""
-FALLBACK_B_ENDPOINT=""
-FALLBACK_B_MODEL_ID="mistralai/Mistral-7B-Instruct-v0.3"
+# Slot 3: Tertiary Open-Weight Provider (Hugging Face Inference - Optional)
+HF_TOKEN=""
+HF_MODEL_ID="meta-llama/Llama-3.2-3B-Instruct"
 
 PORT=3000
 ```
 
 ---
 
-## 11. Automated Testing & Quality Suite
+## 12. Automated Testing & Quality Suite (6 Suites / 16 Tests)
 
-The test suite in `src/tests/testSuite.ts` covers 4 automated suites:
-1. **Deterministic Matches:** Small farmer qualifies for PM-KISAN, urban vendor qualifies for PM SVANidhi, senior citizen qualifies for IGNOAPS.
+The test suite in `src/tests/testSuite.ts` covers 6 automated test suites:
+1. **Deterministic Matches:** Small farmer qualifies for PM-KISAN, urban vendor qualifies for PM SVANidhi, senior citizen qualifies for NSAP IGNOAPS.
 2. **Missing Information Safety:** Unrecorded landholding yields `NEEDS_INFORMATION`; blank profile never outputs false positives.
 3. **Exclusion Clauses & Boundary Limits:** Government employee disqualified from PM-KISAN; income > ₹2.5L fails PM-JAY; age < 19 fails PMMVY.
 4. **Grounding & Fallback Integrity:** Deterministic fallback embeds verified legal citations; Q&A engine strictly refuses out-of-context ungrounded queries.
+5. **Multilingual Dictionary Parity:** Automated recursive key-validation test verifying 100% key parity between English and Hindi dictionaries with zero missing translation keys.
+6. **Geographic Boundaries & State Rules:** Out-of-state exclusion (UP resident fails MP Ladli Behna), eligible resident match, education income limits, and age boundary restrictions.
 
 Run tests via terminal:
 ```bash
@@ -243,14 +289,19 @@ Or open the **"Engine Tests"** tab directly in the web UI.
 
 ---
 
-## 12. Known Limitations & Roadmap
+## 13. Hackathon Demo Walkthrough Flow
 
-- **State-Specific Top-Up Schemes:** Currently covers pan-India Central Sector and Centrally Sponsored schemes. State-specific schemes (e.g. Rythu Bandhu, Ladli Behna) will be added in Phase 2.
-- **Real-Time Land Records (e-Dharti / Bhulekh):** Landholding status is currently self-declared; future integrations can offer voluntary API verification via state land record portals.
-- **Language Coverage:** Currently supports English and Hindi; regional languages (Tamil, Telugu, Bengali, Marathi) planned for subsequent releases.
+For live presentations and judging demos:
+1. **Landing Hero:** Showcase the public-service green/blue design, grounded trust pill, and bilingual language toggle (`EN` / `हिन्दी`).
+2. **Persona Preset Check:** Click *"Farmer (UP)"* or *"Expectant Mother (MP)"* in the profile form to autofill realistic citizen parameters without typing.
+3. **Transparent Criteria Breakdown:** Click *"Evaluate Eligibility"*; examine the results dashboard showing `MATCH`, `NEEDS_INFORMATION`, and `DOES_NOT_MATCH` cards with statutory citations.
+4. **Category Filtering:** Filter across Agriculture, MSME, Healthcare, Housing, Women & Child, and Education.
+5. **Detailed Modal & Grounded Q&A:** Click *"View Scheme Details & Apply"* on PM-KISAN or MP Ladli Behna. Review the Document Checklist and ask a question (e.g., *"What documents are needed?"*). Observe the cited sources and model metadata badge showing active provider slot and latency.
+6. **Model Diagnostics & Failover:** Navigate to the *"AI Diagnostics"* tab to review active slots, latency benchmarks, and run live test pings on the 4-tier pipeline.
+7. **Automated Test Dashboard:** Navigate to *"Engine Tests"* tab and run all 16 unit tests directly in the browser to demonstrate 100% test pass rate and bilingual dictionary symmetry.
 
 ---
 
-## 13. Open Source License
+## 14. Open Source License
 
 Distributed under the **MIT License**. See `LICENSE` for details.

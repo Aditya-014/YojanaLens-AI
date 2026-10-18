@@ -20,7 +20,13 @@ import { VERIFIED_SCHEMES } from './data/verifiedSchemes.ts';
 import { evaluateAllSchemes } from './engine/eligibilityEngine.ts';
 
 export default function App() {
-  const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  const [language, setLanguage] = useState<'en' | 'hi'>(() => {
+    try {
+      const saved = localStorage.getItem('yojanalens_language');
+      if (saved === 'hi' || saved === 'en') return saved;
+    } catch {}
+    return 'en';
+  });
   const [currentTab, setCurrentTab] = useState<'home' | 'form' | 'schemes' | 'models' | 'tests' | 'about'>('home');
   const [profile, setProfile] = useState<UserProfile>(() => {
     // Attempt to load from sessionStorage for page refresh preservation (zero persistent server storage)
@@ -66,7 +72,15 @@ export default function App() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         language={language}
-        onToggleLanguage={() => setLanguage((l) => (l === 'en' ? 'hi' : 'en'))}
+        onToggleLanguage={() => {
+          setLanguage((prev) => {
+            const next = prev === 'en' ? 'hi' : 'en';
+            try {
+              localStorage.setItem('yojanalens_language', next);
+            } catch {}
+            return next;
+          });
+        }}
         matchesCount={matchesCount}
       />
 

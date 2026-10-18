@@ -8,18 +8,13 @@ import {
   AlertCircle,
   HelpCircle,
   Sparkles,
-  FileText,
-  ListOrdered,
   Cpu,
   Send,
-  Building2,
   Calendar,
-  Layers,
-  ArrowRight,
-  BookOpen,
   Info,
 } from 'lucide-react';
 import { SchemeEvaluation, AIExplanationResponse, AIQnAResponse } from '../types/scheme.ts';
+import { getLocale } from '../locales/index.ts';
 
 interface SchemeDetailModalProps {
   evaluation: SchemeEvaluation;
@@ -33,6 +28,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
   language,
 }) => {
   const isHi = language === 'hi';
+  const t = getLocale(language);
   const scheme = evaluation.scheme;
 
   const [activeTab, setActiveTab] = useState<'criteria' | 'ai' | 'documents' | 'steps' | 'faqs'>('criteria');
@@ -52,7 +48,6 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
   // Fetch AI explanation on mount or tab click
   const fetchAiExplanation = async () => {
-    if (aiExplanation) return;
     setLoadingAi(true);
     setAiError(null);
 
@@ -121,9 +116,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
         ...prev,
         {
           q: query,
-          a: isHi
-            ? 'क्षमा करें, उत्तर प्राप्त करने में समस्या हुई। कृपया पुनः प्रयास करें।'
-            : 'Apologies, failed to receive an answer. Please retry.',
+          a: t.modal.qnaError,
         },
       ]);
     } finally {
@@ -151,13 +144,13 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               <span className="text-xs text-stone-500 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>
-                  {isHi ? 'अंतिम सत्यापन:' : 'Verified on:'} {scheme.lastVerifiedDate}
+                  {t.modal.verifiedOn} {scheme.lastVerifiedDate}
                 </span>
               </span>
               {scheme.isVerified && (
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>{isHi ? 'मंत्रालय से सत्यापित' : 'Ministry Verified'}</span>
+                  <span>{t.modal.ministryVerified}</span>
                 </span>
               )}
             </div>
@@ -174,21 +167,21 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-stone-400 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer"
-            title="Close / बंद करें"
+            title={t.modal.closeBtn}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Official Links & Status Banner */}
-        <div className="px-6 py-3 bg-emerald-900 text-emerald-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-6 py-3 bg-emerald-950 text-emerald-100 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-emerald-200">{isHi ? 'पात्रता स्थिति:' : 'Status:'}</span>
+            <span className="font-semibold text-emerald-200">{t.modal.statusLabel}</span>
             <span className="px-2.5 py-0.5 rounded-full font-bold bg-white text-emerald-950">
               {evaluation.status}
             </span>
             <span className="text-emerald-300">
-              ({evaluation.passedCount}/{evaluation.totalCriteria} {isHi ? 'शर्तें पूरी' : 'criteria passed'})
+              ({evaluation.passedCount}/{evaluation.totalCriteria} {t.modal.criteriaPassed})
             </span>
           </div>
 
@@ -199,7 +192,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-semibold transition-colors"
             >
-              <span>{isHi ? 'आधिकारिक पोर्टल' : 'Official Portal'}</span>
+              <span>{t.modal.officialPortal}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
@@ -210,7 +203,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors"
               >
-                <span>{isHi ? 'सीधे आवेदन करें' : 'Apply Online'}</span>
+                <span>{t.modal.applyOnline}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             )}
@@ -227,7 +220,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 : 'border-transparent text-stone-600 hover:text-stone-900'
             }`}
           >
-            📋 {isHi ? 'पात्रता नियम व साक्ष्य' : 'Criteria & Evidence'}
+            📋 {t.modal.tabs.criteria}
           </button>
 
           <button
@@ -239,7 +232,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
             }`}
           >
             <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>{isHi ? 'एआई मार्गदर्शन व प्रश्नोत्तर' : 'AI Explanation & Q&A'}</span>
+            <span>{t.modal.tabs.ai}</span>
           </button>
 
           <button
@@ -250,7 +243,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 : 'border-transparent text-stone-600 hover:text-stone-900'
             }`}
           >
-            📑 {isHi ? 'आवश्यक दस्तावेज चेकलिस्ट' : 'Document Checklist'}
+            📑 {t.modal.tabs.documents}
           </button>
 
           <button
@@ -261,7 +254,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 : 'border-transparent text-stone-600 hover:text-stone-900'
             }`}
           >
-            🧭 {isHi ? 'आवेदन कैसे करें (कदम)' : 'Application Steps'}
+            🧭 {t.modal.tabs.steps}
           </button>
 
           <button
@@ -272,7 +265,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                 : 'border-transparent text-stone-600 hover:text-stone-900'
             }`}
           >
-            ❓ {isHi ? 'सरकारी प्रश्नोत्तरी' : 'Official FAQs'}
+            ❓ {t.modal.tabs.faqs}
           </button>
         </div>
 
@@ -284,22 +277,24 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               {/* Overview & Benefit Banner */}
               <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
                 <h4 className="text-xs font-bold text-stone-500 uppercase tracking-wider">
-                  {isHi ? 'योजना का उद्देश्य व लाभ:' : 'Scheme Overview & Entitlement:'}
+                  {t.modal.overviewTitle}
                 </h4>
                 <p className="mt-1 text-sm text-stone-700 leading-relaxed">
                   {isHi ? scheme.overview.hi : scheme.overview.en}
                 </p>
                 <div className="mt-3 pt-3 border-t border-stone-200/60 flex items-center justify-between text-xs font-semibold text-emerald-800">
-                  <span>{isHi ? 'प्रदत्त लाभ:' : 'Statutory Benefit:'} {isHi ? scheme.benefitsSummary.hi : scheme.benefitsSummary.en}</span>
+                  <span>
+                    {t.modal.statutoryBenefit} {isHi ? scheme.benefitsSummary.hi : scheme.benefitsSummary.en}
+                  </span>
                 </div>
               </div>
 
               {/* Statutory Criteria Evaluation Table */}
               <div>
                 <h3 className="text-base font-bold text-slate-900 mb-3 flex items-center justify-between">
-                  <span>{isHi ? 'सत्यापित पात्रता नियम मैट्रिक्स' : 'Verified Statutory Criteria Matrix'}</span>
+                  <span>{t.modal.tableTitle}</span>
                   <span className="text-xs font-normal text-stone-500">
-                    {isHi ? 'प्रत्येक शर्त का पारदर्शी मूल्यांकन' : 'Transparent Criterion Breakdown'}
+                    {t.modal.tableSubtitle}
                   </span>
                 </h3>
 
@@ -308,11 +303,11 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     <table className="w-full text-left text-xs">
                       <thead className="bg-stone-100 text-stone-700 uppercase font-bold tracking-wider border-b border-stone-200">
                         <tr>
-                          <th className="py-3 px-4">{isHi ? 'पात्रता नियम' : 'Criterion'}</th>
-                          <th className="py-3 px-4">{isHi ? 'आपकी प्रोफ़ाइल मान' : 'Your Profile Value'}</th>
-                          <th className="py-3 px-4">{isHi ? 'आवश्यक सरकारी शर्त' : 'Required Condition'}</th>
-                          <th className="py-3 px-4">{isHi ? 'परिणाम' : 'Status'}</th>
-                          <th className="py-3 px-4">{isHi ? 'कानूनी साक्ष्य / स्रोत' : 'Source Evidence'}</th>
+                          <th className="py-3 px-4">{t.modal.tableColCriterion}</th>
+                          <th className="py-3 px-4">{t.modal.tableColUserValue}</th>
+                          <th className="py-3 px-4">{t.modal.tableColCondition}</th>
+                          <th className="py-3 px-4">{t.modal.tableColStatus}</th>
+                          <th className="py-3 px-4">{t.modal.tableColEvidence}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-stone-100">
@@ -346,19 +341,19 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                               {c.status === 'PASS' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                  <span>{isHi ? 'सफल (PASS)' : 'PASS'}</span>
+                                  <span>{t.status.passed}</span>
                                 </span>
                               )}
                               {c.status === 'FAIL' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">
                                   <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                                  <span>{isHi ? 'विफल (FAIL)' : 'FAIL'}</span>
+                                  <span>{t.status.failed}</span>
                                 </span>
                               )}
                               {c.status === 'UNKNOWN' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
                                   <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                                  <span>{isHi ? 'विवरण शेष' : 'MISSING'}</span>
+                                  <span>{t.status.unknown}</span>
                                 </span>
                               )}
                             </td>
@@ -378,7 +373,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               {/* Geographic Availability Note */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
                 <span className="font-bold text-slate-900">
-                  {isHi ? 'भौगोलिक विस्तार:' : 'Geographic Scope:'}{' '}
+                  {t.modal.scopeTitle}{' '}
                 </span>
                 <span>
                   {isHi
@@ -398,16 +393,16 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                   <div className="flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-emerald-400" />
                     <span className="font-bold text-white">
-                      {isHi ? 'सक्रिय एआई मॉडल:' : 'Active Model:'}
+                      {t.modal.activeModelLabel}
                     </span>
                     <span className="font-mono text-emerald-300">
-                      {aiExplanation.modelMeta.modelId} ({aiExplanation.modelMeta.slot})
+                      {aiExplanation.modelMeta.modelId} ({aiExplanation.modelMeta.provider})
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-stone-400">
+                  <div className="flex items-center gap-3 text-stone-400 font-mono text-[11px]">
                     <span>
-                      {isHi ? 'विलंबता:' : 'Latency:'} {aiExplanation.modelMeta.latencyMs}ms
+                      {t.modal.latencyLabel} {aiExplanation.modelMeta.latencyMs}ms
                     </span>
                     <span>•</span>
                     <span>
@@ -427,11 +422,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200">
                 <div className="flex items-center gap-2 mb-2 text-emerald-900 font-bold text-sm">
                   <Sparkles className="w-4 h-4 text-emerald-700" />
-                  <span>
-                    {isHi
-                      ? 'योजना लेंस एआई: पात्रता का सरल विश्लेषण'
-                      : 'YojanaLens AI: Simple Eligibility Explanation'}
-                  </span>
+                  <span>{t.modal.aiTitle}</span>
                 </div>
 
                 {loadingAi ? (
@@ -455,7 +446,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
 
                 <div className="mt-4 pt-3 border-t border-emerald-200/60 text-[11px] text-stone-500">
                   <span className="font-semibold text-emerald-900">
-                    {isHi ? 'कानूनी संदर्भ:' : 'Statutory Reference:'}
+                    {t.modal.statutoryRef}
                   </span>{' '}
                   {scheme.sourceCitation}
                 </div>
@@ -465,16 +456,10 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               <div className="p-5 rounded-2xl bg-white border border-stone-200">
                 <h4 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
                   <HelpCircle className="w-4 h-4 text-emerald-700" />
-                  <span>
-                    {isHi
-                      ? 'इस योजना के बारे में सवाल पूछें (साक्ष्य आधारित प्रश्नोत्तर)'
-                      : 'Ask a Question about this Scheme (Strictly Grounded)'}
-                  </span>
+                  <span>{t.modal.qnaTitle}</span>
                 </h4>
                 <p className="text-xs text-stone-500 mb-4">
-                  {isHi
-                    ? 'हम केवल इस योजना के आधिकारिक राजपत्र व दिशानिर्देशों से उत्तर देते हैं। मनगढ़ंत जानकारी नहीं दी जाती।'
-                    : 'Responses are strictly grounded in verified ministry data. The AI will refuse to speculate on out-of-scope topics.'}
+                  {t.modal.qnaSubtitle}
                 </p>
 
                 {/* Preset Fast Questions */}
@@ -491,7 +476,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     }
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
-                    📌 {isHi ? 'अनिवार्य दस्तावेज क्या हैं?' : 'What documents are required?'}
+                    📌 {t.modal.presetQDocs}
                   </button>
 
                   <button
@@ -506,7 +491,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     }
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
-                    🧭 {isHi ? 'आवेदन कैसे करें?' : 'How do I apply?'}
+                    🧭 {t.modal.presetQSteps}
                   </button>
 
                   <button
@@ -521,7 +506,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     }
                     className="px-2.5 py-1 rounded-lg text-xs bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 text-stone-700 border border-stone-200 transition-colors cursor-pointer"
                   >
-                    💰 {isHi ? 'कुल कितना लाभ मिलता है?' : 'What is the exact benefit?'}
+                    💰 {t.modal.presetQBenefit}
                   </button>
                 </div>
 
@@ -536,7 +521,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                         <div className="text-stone-800 bg-white p-2.5 rounded-lg border border-stone-200 leading-relaxed whitespace-pre-line">
                           {item.a}
                           {item.meta && (
-                            <div className="mt-1.5 pt-1.5 border-t border-stone-100 text-[10px] text-stone-400 flex items-center justify-between">
+                            <div className="mt-1.5 pt-1.5 border-t border-stone-100 text-[10px] text-stone-400 flex items-center justify-between font-mono">
                               <span>Model: {item.meta.modelId}</span>
                               <span>{item.meta.latencyMs}ms</span>
                             </div>
@@ -553,11 +538,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     type="text"
                     value={userQuestion}
                     onChange={(e) => setUserQuestion(e.target.value)}
-                    placeholder={
-                      isHi
-                        ? 'उदा. क्या मुझे बैंक गारंटी देनी होगी? या क्या ई-केवाईसी अनिवार्य है?'
-                        : 'e.g. Do I need collateral? Or is e-KYC mandatory?'
-                    }
+                    placeholder={t.modal.qnaInputPlaceholder}
                     className="flex-1 px-3.5 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
                   />
                   <button
@@ -566,10 +547,10 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                   >
                     {askingQnA ? (
-                      <span className="animate-pulse">{isHi ? 'जांच जारी...' : 'Thinking...'}</span>
+                      <span className="animate-pulse">{t.modal.thinkingBtn}</span>
                     ) : (
                       <>
-                        <span>{isHi ? 'पूछें' : 'Ask'}</span>
+                        <span>{t.modal.askBtn}</span>
                         <Send className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -585,18 +566,16 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
-                    {isHi ? 'आधिकारिक दस्तावेज तत्परता चेकलिस्ट' : 'Official Document Readiness Checklist'}
+                    {t.modal.checklistTitle}
                   </h3>
                   <p className="text-xs text-stone-500">
-                    {isHi
-                      ? 'आवेदन से पूर्व सुनिश्चित करें कि आपके पास निम्नलिखित वैध दस्तावेज उपलब्ध हैं।'
-                      : 'Check off the documents you have ready before proceeding to the official portal.'}
+                    {t.modal.checklistSubtitle}
                   </p>
                 </div>
 
                 <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200">
                   {Object.values(checkedDocs).filter(Boolean).length} / {scheme.requiredDocuments.length}{' '}
-                  {isHi ? 'तैयार हैं' : 'ready'}
+                  {t.status.ready}
                 </div>
               </div>
 
@@ -638,13 +617,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                                 : 'bg-stone-100 text-stone-600'
                             }`}
                           >
-                            {doc.mandatory
-                              ? isHi
-                                ? 'अनिवार्य'
-                                : 'Mandatory'
-                              : isHi
-                              ? 'वैकल्पिक'
-                              : 'Optional'}
+                            {doc.mandatory ? t.status.mandatory : t.status.optional}
                           </span>
                         </div>
                         <p className="text-xs text-stone-600 mt-1">
@@ -659,9 +632,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
               <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
                 <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                 <span>
-                  {isHi
-                    ? 'महत्वपूर्ण: सभी सरकारी योजनाओं के लिए आधार कार्ड का आपके सक्रिय मोबाइल नंबर एवं बैंक खाते (डीबीटी एनपीसीआई मैपर) से जुड़ा होना अनिवार्य है।'
-                    : 'Important Notice: Ensure your Aadhaar card is linked to your active mobile number and seeded with your bank account for Direct Benefit Transfer (DBT).'}
+                  {t.modal.checklistNotice}
                 </span>
               </div>
             </div>
@@ -672,12 +643,10 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  {isHi ? 'आधिकारिक आवेदन प्रक्रिया' : 'Step-by-Step Application Roadmap'}
+                  {t.modal.stepsTitle}
                 </h3>
                 <p className="text-xs text-stone-500">
-                  {isHi
-                    ? 'संबंधित मंत्रालय द्वारा अधिसूचित वास्तविक आवेदन प्रक्रिया।'
-                    : 'Official application workflow as documented by the administering ministry.'}
+                  {t.modal.stepsSubtitle}
                 </p>
               </div>
 
@@ -712,7 +681,7 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                           rel="noopener noreferrer"
                           className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
                         >
-                          <span>{isHi ? 'पोर्टल पर जाएं' : 'Open Portal Step'}</span>
+                          <span>{t.modal.openPortalStep}</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
@@ -728,9 +697,9 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
                     href={scheme.officialApplicationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md cursor-pointer"
                   >
-                    <span>{isHi ? 'आधिकारिक आवेदन पोर्टल पर जाएं' : 'Proceed to Official Application Portal'}</span>
+                    <span>{t.modal.proceedPortalBtn}</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
@@ -743,12 +712,10 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  {isHi ? 'आधिकारिक प्रश्नोत्तरी व वैधानिक स्पष्टीकरण' : 'Verified FAQs & Operational Clarifications'}
+                  {t.modal.faqsTitle}
                 </h3>
                 <p className="text-xs text-stone-500">
-                  {isHi
-                    ? 'मंत्रालय के दिशानिर्देशों से संकलित वास्तविक स्पष्टीकरण।'
-                    : 'Statutory clarifications compiled directly from scheme operational manuals.'}
+                  {t.modal.faqsSubtitle}
                 </p>
               </div>
 
@@ -776,16 +743,14 @@ export const SchemeDetailModal: React.FC<SchemeDetailModalProps> = ({
         {/* Modal Footer */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
           <div className="text-[11px] text-stone-500">
-            {isHi
-              ? 'अंतिम पात्रता निर्णय संबंधित सरकारी विभाग द्वारा किया जाता है।'
-              : 'Final eligibility decisions belong strictly to the respective government authority.'}
+            {t.modal.finalDiscretionNotice}
           </div>
 
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs transition-colors cursor-pointer"
           >
-            {isHi ? 'बंद करें' : 'Close View'}
+            {t.modal.closeBtn}
           </button>
         </div>
       </div>

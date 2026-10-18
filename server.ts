@@ -12,6 +12,7 @@ import {
   generateDeterministicExplanation,
   generateDeterministicQnA,
   getModelSlotConfigs,
+  testSpecificSlot,
 } from './server/aiProviderAdapter.ts';
 
 dotenv.config();
@@ -228,57 +229,14 @@ Provide a factual, verified answer with source reference.`;
   // 7. Model Test Ping
   app.post('/api/models/test', async (req: Request, res: Response) => {
     const { slotId = 'primary' } = req.body;
-    const startTime = Date.now();
-
     try {
-      if (slotId === 'primary') {
-        if (!process.env.GEMINI_API_KEY) {
-          return res.json({
-            slotId,
-            success: false,
-            latencyMs: 0,
-            message: 'GEMINI_API_KEY is not configured in server environment.',
-          });
-        }
-
-        const result = await executeWithFailover(
-          'Say "YojanaLens AI Primary Model Diagnostic: OK" in 10 words or less.',
-          'Respond tersely.',
-          () => 'Diagnostic test response from deterministic fallback.'
-        );
-
-        return res.json({
-          slotId,
-          success: !result.usedFallback,
-          modelId: result.modelId,
-          latencyMs: Date.now() - startTime,
-          response: result.text,
-          failoverTrace: result.failoverTrace,
-        });
-      }
-
-      if (slotId === 'deterministic_fallback') {
-        return res.json({
-          slotId,
-          success: true,
-          modelId: 'yojanalens-rule-engine-v1',
-          latencyMs: Date.now() - startTime,
-          response: 'Deterministic Rule Engine operational. All statutory rules verified.',
-          failoverTrace: ['Deterministic engine passed self-test.'],
-        });
-      }
-
-      return res.json({
-        slotId,
-        success: false,
-        latencyMs: 0,
-        message: `Slot '${slotId}' is not configured with external credentials.`,
-      });
+      const result = await testSpecificSlot(slotId);
+      return res.json(result);
     } catch (err: any) {
       return res.json({
         slotId,
         success: false,
-        latencyMs: Date.now() - startTime,
+        latencyMs: 0,
         error: err.message,
       });
     }

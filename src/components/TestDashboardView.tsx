@@ -3,21 +3,17 @@ import {
   CheckCircle2,
   XCircle,
   Play,
-  RotateCcw,
   ShieldCheck,
-  Zap,
-  Terminal,
-  Activity,
-  Layers,
 } from 'lucide-react';
 import { TestSuiteReport } from '../tests/testSuite.ts';
+import { getLocale } from '../locales/index.ts';
 
 interface TestDashboardViewProps {
   language: 'en' | 'hi';
 }
 
 export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }) => {
-  const isHi = language === 'hi';
+  const t = getLocale(language);
 
   const [report, setReport] = useState<TestSuiteReport | null>(null);
   const [running, setRunning] = useState(false);
@@ -51,17 +47,15 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-              {isHi ? 'सत्यापन व गुणवत्ता' : 'Automated Verification'}
+              {t.testsView.pill}
             </span>
-            <span className="text-xs text-stone-500">• Test-Driven Statutory Engine</span>
+            <span className="text-xs text-stone-500">• {t.testsView.subtitlePill}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            {isHi ? 'इकाई परीक्षण एवं गुणवत्ता डैशबोर्ड' : 'Eligibility Engine Unit Test Suite'}
+            {t.testsView.title}
           </h2>
           <p className="mt-1 text-sm text-stone-600 max-w-2xl">
-            {isHi
-              ? 'यह सुइट वास्तविक पात्रता नियमों, अधूरी प्रोफ़ाइल सुरक्षा, अपवर्जन सीमाओं और एआई ग्राउंडिंग की शुद्धता को स्वचालित रूप से जांचता है।'
-              : 'Verifies deterministic eligibility logic, missing profile edge-cases, statutory exclusion boundaries, and anti-hallucination grounding guardrails.'}
+            {t.testsView.desc}
           </p>
         </div>
 
@@ -71,7 +65,7 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
           className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer self-start md:self-auto"
         >
           <Play className={`w-4 h-4 ${running ? 'animate-spin' : ''}`} />
-          <span>{running ? (isHi ? 'परीक्षण जारी...' : 'Running Tests...') : (isHi ? 'सभी परीक्षण पुनः चलाएं' : 'Run All Unit Tests')}</span>
+          <span>{running ? t.testsView.runningBtn : t.testsView.runAllBtn}</span>
         </button>
       </div>
 
@@ -79,14 +73,14 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
       {report && (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
-            <span className="text-xs font-bold text-stone-500 uppercase">Total Tests</span>
+            <span className="text-xs font-bold text-stone-500 uppercase">{t.testsView.totalTests}</span>
             <div className="text-3xl font-extrabold text-slate-900 mt-1">{report.totalTests}</div>
             <div className="text-xs text-stone-400 mt-0.5">Automated test assertions</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-800 uppercase">Passed</span>
+              <span className="text-xs font-bold text-emerald-800 uppercase">{t.testsView.passed}</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-3xl font-extrabold text-emerald-900 mt-1">{report.passedTests}</div>
@@ -95,7 +89,7 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
 
           <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-500 uppercase">Failed</span>
+              <span className="text-xs font-bold text-stone-500 uppercase">{t.testsView.failed}</span>
               <XCircle className="w-4 h-4 text-stone-400" />
             </div>
             <div className="text-3xl font-extrabold text-slate-900 mt-1">{report.failedTests}</div>
@@ -104,7 +98,7 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
 
           <div className="p-5 rounded-2xl bg-stone-900 text-white shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 uppercase">Suite Status</span>
+              <span className="text-xs font-bold text-emerald-400 uppercase">{t.testsView.status}</span>
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="text-xl font-bold text-emerald-300 mt-2">
@@ -137,7 +131,7 @@ export const TestDashboardView: React.FC<TestDashboardViewProps> = ({ language }
                 </div>
 
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  {suite.tests.filter((t) => t.passed).length}/{suite.tests.length} Passed
+                  {suite.tests.filter((t) => t.passed).length}/{suite.tests.length} {t.testsView.passed}
                 </span>
               </div>
 

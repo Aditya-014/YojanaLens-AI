@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import {
   HelpCircle,
-  ShieldCheck,
   RotateCcw,
   Sparkles,
   ArrowRight,
-  Info,
-  CheckCircle2,
   Lock,
+  ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { UserProfile, PROFILE_FIELD_REASONS } from '../types/profile.ts';
 import { INDIAN_STATES_AND_UTS } from '../data/verifiedSchemes.ts';
+import { getLocale } from '../locales/index.ts';
 
 interface ProfileFormProps {
   profile: UserProfile;
@@ -26,6 +26,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
   language,
 }) => {
   const isHi = language === 'hi';
+  const t = getLocale(language);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const updateField = (field: keyof UserProfile, value: any) => {
@@ -191,7 +192,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           type="button"
           onClick={() => setActiveTooltip(isOpen ? null : fieldKey)}
           className="text-stone-400 hover:text-emerald-700 transition-colors p-0.5 rounded cursor-pointer"
-          title={isHi ? 'यह जानकारी क्यों मांगी जा रही है?' : 'Why is this detail needed?'}
+          title={t.form.whyButton}
         >
           <HelpCircle className="w-3.5 h-3.5" />
         </button>
@@ -200,7 +201,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div className="absolute z-30 w-72 p-3 text-xs bg-slate-900 text-stone-100 rounded-xl shadow-xl -top-2 left-6 border border-slate-700 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between gap-1 mb-1">
               <span className="font-bold text-emerald-400">
-                {isHi ? 'आवश्यकता का कारण:' : 'Why we need this:'}
+                {t.form.whyTitle}
               </span>
               <button
                 type="button"
@@ -222,21 +223,17 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       {/* Title & Description */}
       <div className="text-center mb-8">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-          {isHi ? 'नागरिक प्रोफ़ाइल विवरण' : 'Citizen Eligibility Profile'}
+          {t.form.title}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-stone-600 max-w-2xl mx-auto">
-          {isHi
-            ? 'नीचे अपनी बुनियादी जानकारी दर्ज करें। हम न्यूनतम आवश्यक विवरण ही मांगते हैं और हर सवाल का कारण स्पष्ट रूप से समझाते हैं।'
-            : 'Enter your basic details below. We request only the minimum required information and clearly explain why each detail is needed.'}
+          {t.form.subtitle}
         </p>
 
         {/* Privacy Notice Card */}
         <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-left max-w-2xl">
           <Lock className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
-            {isHi
-              ? 'सुरक्षा गारंटी: यह उपकरण कभी आधार नंबर, बैंक खाता विवरण, ओटीपी या पासवर्ड नहीं मांगता। आपकी जानकारी आपके ब्राउज़र सत्र तक ही सीमित है।'
-              : 'Zero Sensitive Credentials: We never ask for Aadhaar numbers, bank account numbers, passwords, or OTPs. All data stays strictly in your session.'}
+            {t.disclaimer.legalDisclosure}
           </span>
         </div>
       </div>
@@ -247,7 +244,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-700" />
             <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              {isHi ? 'त्वरित परीक्षण प्रोफ़ाइल (क्लिक करके भरें):' : 'Quick Test Personas (Click to Load):'}
+              {t.form.quickTestPersonas}
             </span>
           </div>
           <button
@@ -256,7 +253,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             className="text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
-            <span>{isHi ? 'रीसेट करें' : 'Reset Form'}</span>
+            <span>{t.form.resetForm}</span>
           </button>
         </div>
 
@@ -266,35 +263,35 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             onClick={() => loadSampleProfile('farmer')}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
           >
-            🌾 {isHi ? 'छोटे किसान (उ.प्र.)' : 'Small Farmer (UP)'}
+            {t.form.personas.farmer}
           </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('vendor')}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100 transition-colors cursor-pointer"
           >
-            🛒 {isHi ? 'शहरी रेहड़ी-पटरी विक्रेता (महाराष्ट्र)' : 'Urban Street Vendor (MH)'}
+            {t.form.personas.vendor}
           </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('artisan')}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
           >
-            🔨 {isHi ? 'पारंपरिक कारीगर / बढ़ई (राजस्थान)' : 'Artisan / Carpenter (RJ)'}
+            {t.form.personas.artisan}
           </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('mother')}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
           >
-            👶 {isHi ? 'गर्भवती / धात्री माता (म.प्र.)' : 'Expectant Mother (MP)'}
+            {t.form.personas.mother}
           </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('senior')}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100 transition-colors cursor-pointer"
           >
-            👴 {isHi ? 'वरिष्ठ नागरिक ६७ वर्ष (बिहार)' : 'Senior Citizen 67y (Bihar)'}
+            {t.form.personas.senior}
           </button>
         </div>
       </div>
@@ -310,11 +307,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         {/* Section 1: Location & Demographics */}
         <div className="p-6 rounded-2xl bg-white border border-stone-200/90 shadow-xs">
           <div className="border-b border-stone-100 pb-3 mb-5">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center">
-                1
-              </span>
-              <span>{isHi ? 'स्थान एवं जनसांख्यिकी' : 'Location & Demographics'}</span>
+            <h3 className="text-base font-bold text-slate-900">
+              {t.form.sections.location}
             </h3>
           </div>
 
@@ -322,7 +316,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* State / UT */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'राज्य / केंद्र शासित प्रदेश' : 'State / Union Territory'}
+                {t.form.fields.state}
                 {renderWhyTag('state')}
               </label>
               <select
@@ -330,7 +324,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 onChange={(e) => updateField('state', e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
               >
-                <option value="">{isHi ? '-- राज्य चुनें --' : '-- Select State/UT --'}</option>
+                <option value="">{t.form.fields.statePlaceholder}</option>
                 {INDIAN_STATES_AND_UTS.map((st) => (
                   <option key={st} value={st}>
                     {st}
@@ -342,7 +336,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* Residence (Rural / Urban) */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'निवास का क्षेत्र' : 'Area of Residence'}
+                {t.form.fields.residence}
                 {renderWhyTag('residence')}
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -355,7 +349,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-stone-50 border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  🌾 {isHi ? 'ग्रामीण (Rural)' : 'Rural Area'}
+                  🌾 {t.form.fields.rural}
                 </button>
                 <button
                   type="button"
@@ -366,7 +360,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-stone-50 border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  🏙️ {isHi ? 'शहरी (Urban)' : 'Urban Area'}
+                  🏙️ {t.form.fields.urban}
                 </button>
               </div>
             </div>
@@ -374,14 +368,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* Age */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'आयु (वर्षों में)' : 'Age (in Years)'}
+                {t.form.fields.age}
                 {renderWhyTag('age')}
               </label>
               <input
                 type="number"
                 min="0"
                 max="120"
-                placeholder={isHi ? 'उदा. 35' : 'e.g. 35'}
+                placeholder={t.form.fields.agePlaceholder}
                 value={profile.age === null ? '' : profile.age}
                 onChange={(e) =>
                   updateField('age', e.target.value === '' ? null : Number(e.target.value))
@@ -393,7 +387,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* Gender */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'लिंग' : 'Gender'}
+                {t.form.fields.gender}
                 {renderWhyTag('gender')}
               </label>
               <select
@@ -401,18 +395,18 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 onChange={(e) => updateField('gender', e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
               >
-                <option value="">{isHi ? '-- लिंग चुनें --' : '-- Select Gender --'}</option>
-                <option value="female">{isHi ? 'महिला (Female)' : 'Female'}</option>
-                <option value="male">{isHi ? 'पुरुष (Male)' : 'Male'}</option>
-                <option value="transgender">{isHi ? 'ट्रांसजेंडर (Transgender)' : 'Transgender'}</option>
-                <option value="other">{isHi ? 'अन्य (Other)' : 'Other'}</option>
+                <option value="">{t.form.fields.genderPlaceholder}</option>
+                <option value="female">{t.form.fields.female}</option>
+                <option value="male">{t.form.fields.male}</option>
+                <option value="transgender">{t.form.fields.transgender}</option>
+                <option value="other">{t.form.fields.other}</option>
               </select>
             </div>
 
             {/* Social Category / Caste */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'सामाजिक वर्ग / जाति श्रेणी' : 'Social Category / Caste'}
+                {t.form.fields.category}
                 {renderWhyTag('category')}
               </label>
               <select
@@ -420,7 +414,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 onChange={(e) => updateField('category', e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
               >
-                <option value="">{isHi ? '-- श्रेणी चुनें --' : '-- Select Category --'}</option>
+                <option value="">{t.form.fields.categoryPlaceholder}</option>
                 <option value="General">General / सामान्य</option>
                 <option value="OBC">OBC / अन्य पिछड़ा वर्ग</option>
                 <option value="SC">SC / अनुसूचित जाति</option>
@@ -432,18 +426,18 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* Marital Status */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'वैवाहिक स्थिति' : 'Marital Status'}
+                {t.form.fields.maritalStatus}
               </label>
               <select
                 value={profile.maritalStatus}
                 onChange={(e) => updateField('maritalStatus', e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
               >
-                <option value="">{isHi ? '-- चुनें --' : '-- Select Marital Status --'}</option>
-                <option value="married">{isHi ? 'विवाहित (Married)' : 'Married'}</option>
-                <option value="single">{isHi ? 'अविवाहित (Single)' : 'Single'}</option>
-                <option value="widowed">{isHi ? 'विधवा / विधुर (Widowed)' : 'Widowed'}</option>
-                <option value="divorced">{isHi ? 'तलाकशुदा (Divorced)' : 'Divorced'}</option>
+                <option value="">{t.form.fields.maritalPlaceholder}</option>
+                <option value="married">{t.form.fields.married}</option>
+                <option value="single">{t.form.fields.single}</option>
+                <option value="widowed">{t.form.fields.widowed}</option>
+                <option value="divorced">{t.form.fields.divorced}</option>
               </select>
             </div>
           </div>
@@ -452,11 +446,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         {/* Section 2: Livelihood & Income */}
         <div className="p-6 rounded-2xl bg-white border border-stone-200/90 shadow-xs">
           <div className="border-b border-stone-100 pb-3 mb-5">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center">
-                2
-              </span>
-              <span>{isHi ? 'आजीविका एवं पारिवारिक आय' : 'Livelihood & Family Income'}</span>
+            <h3 className="text-base font-bold text-slate-900">
+              {t.form.sections.livelihood}
             </h3>
           </div>
 
@@ -464,7 +455,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             {/* Primary Occupation */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'मुख्य व्यवसाय / कार्य' : 'Primary Occupation'}
+                {t.form.fields.occupation}
                 {renderWhyTag('occupation')}
               </label>
               <select
@@ -472,24 +463,24 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 onChange={(e) => updateField('occupation', e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
               >
-                <option value="">{isHi ? '-- व्यवसाय चुनें --' : '-- Select Occupation --'}</option>
-                <option value="farmer">🌾 {isHi ? 'किसान / कृषि (Farmer)' : 'Farmer / Agriculture'}</option>
-                <option value="street_vendor">🛒 {isHi ? 'रेहड़ी-पटरी / फेरीवाला (Street Vendor)' : 'Street Vendor / Hawker'}</option>
-                <option value="artisan_craftsperson">🔨 {isHi ? 'पारंपरिक कारीगर / दस्तकार (Artisan)' : 'Traditional Artisan / Craftsperson'}</option>
-                <option value="daily_wage_laborer">🧱 {isHi ? 'दैनिक मजदूर / निर्माण श्रमिक (Daily Wage)' : 'Daily Wage / Construction Laborer'}</option>
-                <option value="self_employed_business">💼 {isHi ? 'स्व-रोजगार / लघु व्यापार (Micro Business)' : 'Self-Employed / Micro Business'}</option>
-                <option value="student">🎓 {isHi ? 'विद्यार्थी (Student)' : 'Student'}</option>
-                <option value="unemployed">⏳ {isHi ? 'बेरोजगार / गृहिणी (Unemployed / Homemaker)' : 'Unemployed / Homemaker'}</option>
-                <option value="salaried_private">🏢 {isHi ? 'वेतनभोगी (निजी कंपनी)' : 'Salaried (Private Sector)'}</option>
-                <option value="salaried_govt">🏛️ {isHi ? 'वेतनभोगी (सरकारी / पीएसयू कर्मचारी)' : 'Salaried (Govt / PSU Regular)'}</option>
-                <option value="other">📌 {isHi ? 'अन्य व्यवसाय (Other)' : 'Other'}</option>
+                <option value="">{t.form.fields.occupationPlaceholder}</option>
+                <option value="farmer">🌾 {t.form.fields.occupations.farmer}</option>
+                <option value="street_vendor">🛒 {t.form.fields.occupations.vendor}</option>
+                <option value="artisan_craftsperson">🔨 {t.form.fields.occupations.artisan}</option>
+                <option value="daily_wage_laborer">🧱 {t.form.fields.occupations.dailyWage}</option>
+                <option value="self_employed_business">💼 {t.form.fields.occupations.business}</option>
+                <option value="student">🎓 {t.form.fields.occupations.student}</option>
+                <option value="unemployed">⏳ {t.form.fields.occupations.unemployed}</option>
+                <option value="salaried_private">🏢 {t.form.fields.occupations.salariedPrivate}</option>
+                <option value="salaried_govt">🏛️ {t.form.fields.occupations.salariedGovt}</option>
+                <option value="other">📌 {t.form.fields.occupations.other}</option>
               </select>
             </div>
 
             {/* Annual Family Income */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                {isHi ? 'वार्षिक पारिवारिक आय (₹ रुपये)' : 'Annual Family Income (₹ INR)'}
+                {t.form.fields.income}
                 {renderWhyTag('annualIncome')}
               </label>
               <div className="relative">
@@ -498,7 +489,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                   type="number"
                   min="0"
                   step="5000"
-                  placeholder={isHi ? 'उदा. 150000' : 'e.g. 150000'}
+                  placeholder={t.form.fields.incomePlaceholder}
                   value={profile.annualIncome === null ? '' : profile.annualIncome}
                   onChange={(e) =>
                     updateField('annualIncome', e.target.value === '' ? null : Number(e.target.value))
@@ -507,9 +498,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 />
               </div>
               <p className="mt-1 text-[11px] text-stone-500">
-                {isHi
-                  ? 'परिवार के सभी सदस्यों की कुल वार्षिक आय।'
-                  : 'Total combined annual income of all household members.'}
+                {t.form.fields.incomeHelp}
               </p>
             </div>
           </div>
@@ -518,35 +507,24 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         {/* Section 3: Specific Welfare Conditions */}
         <div className="p-6 rounded-2xl bg-white border border-stone-200/90 shadow-xs">
           <div className="border-b border-stone-100 pb-3 mb-5">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center">
-                3
-              </span>
-              <span>
-                {isHi
-                  ? 'विशेष योजना-संबंधित परिस्थितियां'
-                  : 'Scheme-Specific Criteria (Only when applicable)'}
-              </span>
+            <h3 className="text-base font-bold text-slate-900">
+              {t.form.sections.specific}
             </h3>
             <p className="mt-1 text-xs text-stone-500">
-              {isHi
-                ? 'ये प्रश्न केवल विशिष्ट योजनाओं (जैसे पीएम-किसान, मातृ वंदना, सुकन्या समृद्धि या आवास योजना) की शर्तों के सत्यापन के लिए हैं।'
-                : 'These details are strictly required to verify conditions for targeted programs like PM-KISAN, PMMVY, SSY, or PMAY.'}
+              {t.form.sections.specificDesc}
             </p>
           </div>
 
           <div className="space-y-4">
-            {/* Cultivable Land (Relevant for PM-KISAN) */}
+            {/* Cultivable Land */}
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-sm font-bold text-stone-800">
-                  {isHi ? 'क्या आपके नाम कृषियोग्य भूमि दर्ज है?' : 'Do you own cultivable agricultural land in your name?'}
+                  {t.form.fields.land}
                   {renderWhyTag('ownsCultivableLand')}
                 </span>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  {isHi
-                    ? 'पीएम-किसान सम्मान निधि के लिए राजस्व रिकॉर्ड में नाम होना अनिवार्य शर्त है।'
-                    : 'Mandatory statutory requirement under PM-KISAN operational rules.'}
+                  {t.form.fields.landHelp}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -559,7 +537,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'हाँ (Yes)' : 'Yes'}
+                  {t.form.yes}
                 </button>
                 <button
                   type="button"
@@ -570,22 +548,91 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'नहीं (No)' : 'No'}
+                  {t.form.no}
                 </button>
               </div>
             </div>
 
-            {/* Maternal Status (Relevant for PMMVY) */}
+            {profile.ownsCultivableLand === true && (
+              <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950">
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>{t.form.fields.landNoticeTitle}</span>
+                </div>
+                <p className="leading-relaxed text-amber-900/90 mb-2.5">
+                  {t.form.fields.landNoticeBody}
+                </p>
+                <div className="text-[11px] font-bold text-amber-900 mb-1.5">
+                  {t.form.fields.landPortalsTitle}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="https://upbhulekh.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    UP Bhulekh
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                  <a
+                    href="https://mpbhulekh.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    MP Bhulekh
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                  <a
+                    href="https://biharbhumi.bihar.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    Bihar Bhumi
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                  <a
+                    href="https://bhulekh.mahabhumi.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    Mahabhulekh (MH)
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                  <a
+                    href="https://banglarbhumi.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    Banglarbhumi (WB)
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                  <a
+                    href="https://dilrmp.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100"
+                  >
+                    DILRMP Central
+                    <ExternalLink className="w-3 h-3 text-amber-700" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Maternal Status */}
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-sm font-bold text-stone-800">
-                  {isHi ? 'क्या आप वर्तमान में गर्भवती महिला अथवा स्तनपान कराने वाली माता हैं?' : 'Are you currently pregnant or a lactating mother?'}
+                  {t.form.fields.mother}
                   {renderWhyTag('isPregnantOrLactating')}
                 </span>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  {isHi
-                    ? 'प्रधानमंत्री मातृ वंदना योजना (PMMVY) मातृत्व प्रोत्साहन के लिए।'
-                    : 'Required strictly to evaluate Pradhan Mantri Matru Vandana Yojana.'}
+                  {t.form.fields.motherHelp}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -598,7 +645,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'हाँ (Yes)' : 'Yes'}
+                  {t.form.yes}
                 </button>
                 <button
                   type="button"
@@ -609,22 +656,20 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'नहीं (No)' : 'No'}
+                  {t.form.no}
                 </button>
               </div>
             </div>
 
-            {/* Existing Pucca House (Relevant for PMAY-Urban) */}
+            {/* Existing Pucca House */}
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-sm font-bold text-stone-800">
-                  {isHi ? 'क्या आपके या आपके परिवार के नाम भारत में कहीं भी पक्का मकान है?' : 'Does any family member own a pucca house anywhere in India?'}
+                  {t.form.fields.house}
                   {renderWhyTag('hasExistingPuccaHouse')}
                 </span>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  {isHi
-                    ? 'पीएम आवास योजना के नियमों के अनुसार परिवार के पास पक्का मकान नहीं होना चाहिए।'
-                    : 'PMAY-Urban statutory rules mandate that beneficiary family must be pucca-houseless.'}
+                  {t.form.fields.houseHelp}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -637,7 +682,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'हाँ (Yes)' : 'Yes'}
+                  {t.form.yes}
                 </button>
                 <button
                   type="button"
@@ -648,22 +693,20 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'नहीं (No)' : 'No'}
+                  {t.form.no}
                 </button>
               </div>
             </div>
 
-            {/* Girl Child under 10 (Relevant for Sukanya Samriddhi) */}
+            {/* Girl Child under 10 */}
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-sm font-bold text-stone-800">
-                  {isHi ? 'क्या आपके परिवार में १० वर्ष से कम आयु की बालिका है?' : 'Do you have a girl child below 10 years of age?'}
+                  {t.form.fields.girlChild}
                   {renderWhyTag('hasGirlChildUnder10')}
                 </span>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  {isHi
-                    ? 'सुकन्या समृद्धि योजना (SSY) में उच्च ब्याज बचत खाता खोलने के लिए।'
-                    : 'Required exclusively for opening a Sukanya Samriddhi Yojana (SSY) account.'}
+                  {t.form.fields.girlChildHelp}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -676,7 +719,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'हाँ (Yes)' : 'Yes'}
+                  {t.form.yes}
                 </button>
                 <button
                   type="button"
@@ -687,7 +730,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  {isHi ? 'नहीं (No)' : 'No'}
+                  {t.form.no}
                 </button>
               </div>
             </div>
@@ -697,9 +740,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         {/* Submit Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
           <div className="text-xs text-stone-500">
-            {isHi
-              ? 'सत्यापन तुरंत नियम-आधारित इंजन द्वारा किया जाएगा।'
-              : 'Evaluation is executed immediately via the deterministic rule engine.'}
+            {t.form.evalNotice}
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -708,14 +749,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
               onClick={handleReset}
               className="w-1/2 sm:w-auto px-5 py-3 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 font-semibold text-sm transition-colors cursor-pointer"
             >
-              {isHi ? 'साफ़ करें' : 'Clear Form'}
+              {t.form.clearBtn}
             </button>
 
             <button
               type="submit"
               className="w-1/2 sm:w-auto px-7 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>{isHi ? 'पात्रता की गणना करें' : 'Evaluate Eligibility'}</span>
+              <span>{t.form.evaluateBtn}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

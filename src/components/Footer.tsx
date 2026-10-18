@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Heart, ExternalLink } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import { getLocale } from '../locales/index.ts';
 
 interface FooterProps {
   onSelectTab: (tab: 'home' | 'form' | 'schemes' | 'models' | 'tests' | 'about') => void;
@@ -7,7 +8,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectTab, language }) => {
-  const isHi = language === 'hi';
+  const t = getLocale(language);
 
   return (
     <footer className="mt-16 bg-white border-t border-stone-200">
@@ -23,12 +24,10 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, language }) => {
             </div>
             <div>
               <div className="text-base font-bold text-slate-900">
-                Yojana<span className="text-emerald-700">Lens</span> AI
+                {t.brand.name}
               </div>
               <div className="text-xs text-stone-500">
-                {isHi
-                  ? 'सरकारी योजना पात्रता सहायक • नागरिक कल्याण खोज'
-                  : 'Your Government Scheme Eligibility Assistant'}
+                {t.footer.tagline}
               </div>
             </div>
           </div>
@@ -39,35 +38,35 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, language }) => {
               onClick={() => onSelectTab('form')}
               className="hover:text-emerald-700 cursor-pointer"
             >
-              {isHi ? 'पात्रता जांचें' : 'Check Eligibility'}
+              {t.nav.checkEligibility}
             </button>
             <span>•</span>
             <button
               onClick={() => onSelectTab('schemes')}
               className="hover:text-emerald-700 cursor-pointer"
             >
-              {isHi ? 'सभी योजनाएं' : 'Explore Schemes'}
+              {t.nav.exploreSchemes}
             </button>
             <span>•</span>
             <button
               onClick={() => onSelectTab('models')}
               className="hover:text-emerald-700 cursor-pointer"
             >
-              {isHi ? 'एआई मॉडल फॉलबैक' : 'AI Models & Failover'}
+              {t.nav.modelDiagnostics}
             </button>
             <span>•</span>
             <button
               onClick={() => onSelectTab('tests')}
               className="hover:text-emerald-700 cursor-pointer"
             >
-              {isHi ? 'इकाई परीक्षण' : 'Engine Tests'}
+              {t.nav.engineTests}
             </button>
             <span>•</span>
             <button
               onClick={() => onSelectTab('about')}
               className="hover:text-emerald-700 cursor-pointer"
             >
-              {isHi ? 'गोपनीयता नीति' : 'Privacy & Disclaimer'}
+              {t.nav.privacyAbout}
             </button>
           </div>
         </div>
@@ -75,13 +74,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, language }) => {
         {/* Bottom Legal Notice */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
           <p className="text-center sm:text-left max-w-2xl">
-            {isHi
-              ? 'महत्वपूर्ण सूचना: योजना लेंस एआई किसी भी सरकारी विभाग का आधिकारिक प्रतिनिधि नहीं है। यहाँ दिए गए परिणाम केवल प्रारंभिक मार्गदर्शन हैं। कोई भी संवेदनशील जानकारी (जैसे आधार संख्या या बैंक पासवर्ड) कभी साझा न करें।'
-              : 'Public Notice: YojanaLens AI is an independent public-service discovery tool, not an official government portal. Results are preliminary and final decisions belong to respective government authorities. Never share sensitive OTPs or bank passwords.'}
+            {t.footer.disclaimer}
           </p>
 
           <div className="shrink-0 font-medium">
-            © 2026 YojanaLens AI • Open Public Service
+            {t.footer.copyright}
           </div>
         </div>
       </div>

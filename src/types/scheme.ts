@@ -5,7 +5,8 @@ export type SchemeCategory =
   | 'women_child'
   | 'housing'
   | 'social_security'
-  | 'financial_inclusion';
+  | 'financial_inclusion'
+  | 'education';
 
 export type EligibilityStatus = 'MATCH' | 'NEEDS_INFORMATION' | 'DOES_NOT_MATCH' | 'UNVERIFIED';
 
